@@ -1,0 +1,5 @@
+module uefi;
+
+
+//
+extern fn void initialize_lib(EfiHandle, SystemTable*);
