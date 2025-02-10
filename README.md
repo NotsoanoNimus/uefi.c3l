@@ -41,6 +41,7 @@ fn EfiStatus efi_main(
 
 ## Installation
 The library is incredibly easy to pull and use right away.
+
 1.) Change to your project's `lib` directory.
 2.) Clone this repository: `git clone https://github.com/NotsoanoNimus/uefi.c3l.git`.
 3.) Start developing with `import uefi;` where needed.
