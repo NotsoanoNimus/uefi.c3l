@@ -42,9 +42,9 @@ fn EfiStatus efi_main(
 ## Installation
 The library is incredibly easy to pull and use right away.
 
-1.) Change to your project's `lib` directory.
-2.) Clone this repository: `git clone https://github.com/NotsoanoNimus/uefi.c3l.git`.
-3.) Start developing with `import uefi;` where needed.
+1. Change to your project's `lib` directory.
+2. Clone this repository: `git clone https://github.com/NotsoanoNimus/uefi.c3l.git`.
+3. Start developing with `import uefi;` where needed.
 
 Most projects will automatically source modules from their `lib` folders. If this is not the case, you can use the following `c3c` parameters to source the library: `--lib uefi --libdir lib/`
 
