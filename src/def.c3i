@@ -9,7 +9,7 @@ distinct EfiHandle = void*;
 /*
  * All UEFI strings are wchar_t strings (Wide-Char types).
  */
-distinct EfiString = inline ushort*;
+def EfiString = ushort*;
 
 /*
  * EFI_EVENT alias (sec 7.1.1 of the UEFI 2.11 specification).
@@ -49,18 +49,19 @@ const uint  EFI_1_02_SYSTEM_TABLE_REVISION  = ((1<<16) | (02));
 const uint  EFI_SYSTEM_TABLE_REVISION       = EFI_2_100_SYSTEM_TABLE_REVISION;
 const uint  EFI_SPECIFICATION_VERSION       = EFI_SYSTEM_TABLE_REVISION;
 
+/* NOTE: Do NOT pack this struct: firmware_revision being 32-bit causes misalignment */
 struct SystemTable
 {
     EfiTableHeader              header;
     EfiString                   firmware_vendor;
     uint                        firmware_revision;
     EfiHandle                   conin_handle;
-//    SimpleTextInputProtocol     *conin;
+    SimpleTextInputProtocol     *conin;
     EfiHandle                   conout_handle;
-//    SimpleTextOutputProtocol    *conout;
+    SimpleTextOutputProtocol    *conout;
     EfiHandle                   conerr_handle;
-//    SimpleTextOutputProtocol    *conerr;
-//    RuntimeServices             *runtime_services;
+    SimpleTextOutputProtocol    *conerr;
+    RuntimeServices             *runtime_services;
     BootServices                *boot_services;
     usz                         num_entries;
     ConfigurationTable          *configuration_table;
@@ -70,7 +71,7 @@ struct SystemTable
 /*
  * EFI_CONFIGURATION_TABLE structure (sec 4.6.1 of the UEFI 2.11 specification).
  */
-struct ConfigurationTable
+struct ConfigurationTable @packed
 {
     EfiGuid     vendor_guid;
     void        *vendor_table;
@@ -81,7 +82,7 @@ struct ConfigurationTable
 const ulong EFI_BOOT_SERVICES_SIGNATURE = 0x56524553544f4f42; //'BOOTSERV' <- EightCC
 const uint EFI_BOOT_SERVICES_REVISION   = EFI_SPECIFICATION_VERSION;
 
-struct BootServices
+struct BootServices @packed
 {
     EfiTableHeader              header;
 
@@ -116,9 +117,10 @@ struct BootServices
     FnInstallConfigurationTable         install_configuration_table;
 
     /* Image services (uefi::proto::image) */
-    FnUnloadImage               unload_image;
+    FnLoadImage                 load_image;
     FnStartImage                start_image;
     FnExitImage                 exit_image;
+    FnUnloadImage               unload_image;
     FnExitBootServices          exit_boot_services;
 
     /* Misc services (uefi::proto::misc_bs) */
@@ -152,6 +154,34 @@ struct BootServices
 }
 
 
+struct RuntimeServices @packed
+{
+    EfiTableHeader              header;
+
+    /* Time services (uefi::proto::time) */
+    FnGetTime                   get_time;
+    FnSetTime                   set_time;
+    FnGetWakeupTime             get_wakeup_time;
+    FnSetWakeupTime             set_wakeup_time;
+
+    /* Virtual Memory services (uefi::proto::mem) */
+    FnSetVirtualAddressMap      set_virtual_address_map;
+    FnConvertPointer            convert_pointer;
+
+    /* Variable services (uefi::proto::variable) */
+    FnGetVariable               get_variable;
+    FnGetNextVariableName       get_next_variable_name;
+    FnSetVariable               set_variable;
+
+    /* Miscellaneous and Capsule services (uefi::proto::misc_rt) */
+    FnGetNextHighMonotonicCount get_next_high_monotonic_count;
+    FnResetSystem               reset_system;
+    FnUpdateCapsule             update_capsule;
+    FnQueryCapsuleCapabilities  query_capsule_capabilities;
+    FnQueryVariableInfo         query_variable_info;
+}
+
+
 
 /*
  * EFI_GUID structure (sec x.x.x of the UEFI 2.11 specification).
@@ -179,9 +209,18 @@ struct EfiTime @packed
     char        _pad1;
     uint        nanosecond;
     short       timezone;
-    char        dst;
+    EfiDaylightFlags daylight;
     char        _pad2;
 }
+
+bitstruct EfiDaylightFlags : char
+{
+    bool        adjust          : 0;
+    bool        in_daylight     : 1;
+    char        reserved        : 2..7;
+}
+
+const short EFI_UNSPECIFIED_TIMEZONE = 0x07FF;
 
 /*
  * EFI_TIME_CAPABILITIES (sec 8.3.1 of the UEFI 2.11 specification).

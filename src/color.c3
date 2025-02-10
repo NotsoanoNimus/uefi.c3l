@@ -3,7 +3,17 @@ import uefi;
 
 
 /* Standard terminal color constants. */
-const char BLACK        = 0x00;
-const char BLUE         = 0x01;
+enum TextColor : char (inline char raw)
+{
+    BLACK       = 0x00,
+    BLUE        = 0x01,
+    GREEN       = 0x02,
+    CYAN        = 0x03,
+    RED         = 0x04,
+    MAGENTA     = 0x05,
+    BROWN       = 0x06,
+    GRAY        = 0x07,
+    BRIGHT      = 0x08,
+}
 
-macro char @text_attr($fg, $bg) @public => ($fg | ($bg << 4));
+macro char @tcolor($fg, $bg) @public => ($fg | ($bg << 4));

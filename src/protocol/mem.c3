@@ -54,7 +54,6 @@ struct MemoryDescriptor
 }
 
 distinct MemoryAttribute = ulong;
-
 const MemoryAttribute MEMORY_UC                 = 0x0000_0000_0000_0001;
 const MemoryAttribute MEMORY_WC                 = 0x0000_0000_0000_0002;
 const MemoryAttribute MEMORY_WT                 = 0x0000_0000_0000_0004;
@@ -78,3 +77,19 @@ def FnAllocatePool = fn EfiStatus(MemoryType, usz, void**);
 
 /* EFI_FREE_POOL (7.2.5) */
 def FnFreePool = fn EfiStatus(void*);
+
+
+/* 8.4.) Virtual Memory services */
+/* 8.4.1.) SetVirtualAddressMap() */
+def FnSetVirtualAddressMap = fn EfiStatus(usz, usz, uint, MemoryDescriptor*);
+
+/* 8.4.2.) ConvertPointer() */
+def FnConvertPointer = fn EfiStatus(usz, void**);
+const usz EFI_OPTIONAL_PTR = 0x1;
+
+/* 8.5.3.3.) Items related to capsules */
+struct MemoryRange
+{
+    PhysicalAddress     address;
+    ulong               length;
+}

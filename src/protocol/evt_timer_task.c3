@@ -3,9 +3,8 @@ import uefi;
 
 
 /* 7.1.) Event, Timer, and Task Priority Services */
-distinct EfiEvent  = void*;
+/* NOTE: EfiEvent is defined in ../def.c3, as it's more globally used. */
 distinct EventType = uint;
-
 const EventType EVT_TIMER               = 0x8000_0000;
 const EventType EVT_RUNTIME             = 0x4000_0000;
 const EventType EVT_NOTIFY_WAIT         = 0x0000_0100;

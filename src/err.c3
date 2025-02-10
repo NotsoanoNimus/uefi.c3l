@@ -4,10 +4,9 @@ module uefi;
 /*
  * EFI_STATUS enum (apx D of the UEFI 2.11 specification).
  */
-/* EfiStatus is a distinct type that shouldn't be implicitly converted. */
 distinct EfiStatus = usz;
 
-macro @efi_err($x) @private => (EfiStatus)((1 << (usz.sizeof - 1)) | $x);
+macro @efi_err($x) @private => (EfiStatus)((1l << ((usz.sizeof * 8) - 1)) | $x);
 macro @efi_warn($x) @private => (EfiStatus)$x;
 
 const EfiStatus EFI_SUCCESS             = 0;
@@ -61,76 +60,73 @@ const EfiStatus EFI_WARN_RESET_REQUIRED = @efi_warn(7);
     in the handling of a program, if the user so chooses to. */
 fault EfiError
 {
-    EFI_LOAD_ERROR          ,
-    EFI_INVALID_PARAMETER   ,
-    EFI_UNSUPPORTED         ,
-    EFI_BAD_BUFFER_SIZE     ,
-    EFI_BUFFER_TOO_SMALL    ,
-    EFI_NOT_READY           ,
-    EFI_DEVICE_ERROR        ,
-    EFI_WRITE_PROTECTED     ,
-    EFI_OUT_OF_RESOURCES    ,
-    EFI_VOLUME_CORRUPTED    ,
-    EFI_VOLUME_FULL         ,
-    EFI_NO_MEDIA            ,
-    EFI_MEDIA_CHANGED       ,
-    EFI_NOT_FOUND           ,
-    EFI_ACCESS_DENIED       ,
-    EFI_NO_RESPONSE         ,
-    EFI_NO_MAPPING          ,
-    EFI_TIMEOUT             ,
-    EFI_NOT_STARTED         ,
-    EFI_ALREADY_STARTED     ,
-    EFI_ABORTED             ,
-    EFI_ICMP_ERROR          ,
-    EFI_TFTP_ERROR          ,
-    EFI_PROTOCOL_ERROR      ,
-    EFI_INCOMPATIBLE_VERSION,
-    EFI_SECURITY_VIOLATION  ,
-    EFI_CRC_ERROR           ,
-    EFI_END_OF_MEDIA        ,
-    EFI_UNKNOWN_29          ,   /* NOTE: UEFI spec is missing this definition. */
-    EFI_UNKNOWN_30          ,   /* NOTE: UEFI spec is missing this definition. */
-    EFI_END_OF_FILE         ,
-    EFI_INVALID_LANGUAGE    ,
-    EFI_COMPROMISED_DATA    ,
-    EFI_IP_ADDRESS_CONFLICT ,
-    EFI_HTTP_ERROR          ,
+    LOAD_ERROR          ,
+    INVALID_PARAMETER   ,
+    UNSUPPORTED         ,
+    BAD_BUFFER_SIZE     ,
+    BUFFER_TOO_SMALL    ,
+    NOT_READY           ,
+    DEVICE_ERROR        ,
+    WRITE_PROTECTED     ,
+    OUT_OF_RESOURCES    ,
+    VOLUME_CORRUPTED    ,
+    VOLUME_FULL         ,
+    NO_MEDIA            ,
+    MEDIA_CHANGED       ,
+    NOT_FOUND           ,
+    ACCESS_DENIED       ,
+    NO_RESPONSE         ,
+    NO_MAPPING          ,
+    TIMEOUT             ,
+    NOT_STARTED         ,
+    ALREADY_STARTED     ,
+    ABORTED             ,
+    ICMP_ERROR          ,
+    TFTP_ERROR          ,
+    PROTOCOL_ERROR      ,
+    INCOMPATIBLE_VERSION,
+    SECURITY_VIOLATION  ,
+    CRC_ERROR           ,
+    END_OF_MEDIA        ,
+    UNKNOWN_29          ,   /* NOTE: UEFI spec is missing this definition. */
+    UNKNOWN_30          ,   /* NOTE: UEFI spec is missing this definition. */
+    END_OF_FILE         ,
+    INVALID_LANGUAGE    ,
+    COMPROMISED_DATA    ,
+    IP_ADDRESS_CONFLICT ,
+    HTTP_ERROR          ,
 
-    EFI_UNKNOWN_STATUS      ,   /* Fallback for an unknown status code. */
+    UNKNOWN_STATUS      ,   /* Fallback for an unknown status code. */
 }
 
 fault EfiWarning
 {
-    EFI_WARN_UNKNOWN_GLYPH   ,
-    EFI_WARN_DELETE_FAILURE  ,
-    EFI_WARN_WRITE_FAILURE   ,
-    EFI_WARN_BUFFER_TOO_SMALL,
-    EFI_WARN_STALE_DATA      ,
-    EFI_WARN_FILE_SYSTEM     ,
-    EFI_WARN_RESET_REQUIRED  ,
+    UNKNOWN_GLYPH   ,
+    DELETE_FAILURE  ,
+    WRITE_FAILURE   ,
+    BUFFER_TOO_SMALL,
+    STALE_DATA      ,
+    FILE_SYSTEM     ,
+    RESET_REQUIRED  ,
 }
 
 
 ////////////////////////////////////////////////////////////////////////
-module uefi::efi;
-import uefi;
-
 <*
-    @param status "The EfiStatus code to check."
+    @param status "The EfiStatus code to check"
+    @param throw_on_warnings "Return a `true` value on EFI_WARN_... codes"
 *>
-// TODO: There's probably a better way to do this.
-fn bool! is_error(EfiStatus status, bool throw_on_warnings)
+fn bool! is_error(EfiStatus status, bool throw_on_warnings = true) @export("is_error")
 {
     switch {
-        case status == uefi::EFI_SUCCESS: return false;
+        case status == EFI_SUCCESS: return false;
 
-        case status >= uefi::EFI_WARN_UNKNOWN_GLYPH && status <= uefi::EFI_WARN_RESET_REQUIRED:
+        case status >= EFI_WARN_UNKNOWN_GLYPH && status <= EFI_WARN_RESET_REQUIRED:
             return throw_on_warnings ? EfiWarning.values[(usz)status]? : true;
 
-        case status >= uefi::EFI_LOAD_ERROR && status <= uefi::EFI_HTTP_ERROR:
-            return EfiError.values[(usz)(status & ~(1 << (usz.sizeof - 1)))]?;
+        case status >= EFI_LOAD_ERROR && status <= EFI_HTTP_ERROR:
+            return EfiError.values[(usz)status & ~(1l << ((usz.sizeof * 8) - 1))]?;
     }
 
-    return EfiError.EFI_UNKNOWN_STATUS?;
+    return EfiError.UNKNOWN_STATUS?;
 }

@@ -19,7 +19,7 @@ def FnUninstallProtocolInterface = fn EfiStatus(EfiHandle*, EfiGuid*, void*);
 def FnReinstallProtocolInterface = fn EfiStatus(EfiHandle*, EfiGuid*, void*, void*);
 
 /* EFI_REGISTER_PROTOCOL_NOTIFY (7.3.5) */
-def FnRegisterProtocolNotify = fn EfiStatus(EfiGuid*, evt::EfiEvent, void**);
+def FnRegisterProtocolNotify = fn EfiStatus(EfiGuid*, EfiEvent, void**);
 
 /* EFI_LOCATE_HANDLE (7.3.6) and related */
 def FnLocateHandle = fn EfiStatus(HandleSearchType, EfiGuid*, void*, usz*, EfiHandle*);
