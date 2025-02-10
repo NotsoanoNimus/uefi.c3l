@@ -1,4 +1,4 @@
-module uefi;
+module uefi::adapter @private;
 
 
 /* Create a memcpy symbol to use globally when building applications. */
@@ -20,4 +20,17 @@ fn void *memcpy(void *dst, void *src, usz len)
     }
 
     return dst;
+}
+
+
+fn void *memset(void *at, char value, usz len)
+    @export("memset")
+{
+    if (null == at || 0 == len) return null;
+
+    char *p = (char *)at;
+
+    while (len--) *p++ = value;
+
+    return at;
 }
