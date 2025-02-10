@@ -27,8 +27,7 @@ fn EfiStatus efi_main(
     efi_sys.console.cprintln(str_to_wide("Enabling GOP mode..."), {GREEN, BLACK})!!;
 
     if (catch excuse = efilib::enable_gop()) {
-        efi_sys.console.cprintln(str_to_wide("ERROR: Failed to initialize Graphics Output Protocol."),
-{RED, BLACK})!!;
+        efi_sys.console.cprintln(str_to_wide("ERROR: Failed to initialize Graphics Output Protocol."), {RED, BLACK})!!;
     } else {
         efi_sys.framebuffer.draw_rect({0,0,100,200},{0xff123456,0xff0000dd});
     }
