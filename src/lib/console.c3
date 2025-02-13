@@ -54,6 +54,18 @@ fn EfiStatus! Console.print(
 }
 
 
+fn EfiStatus! Console.println(
+    Console *this,
+    EfiString text,
+    SimpleTextOutputProtocol *stream = null
+) {
+    this.print(text, stream)!;
+
+    ushort[3] nl = { '\r', '\n', 0x00 };
+    this.print((EfiString)&nl, stream)!;
+}
+
+
 fn void! Console.cprint(
     Console *this,
     EfiString text,
@@ -78,7 +90,7 @@ fn void! Console.cprintln(
 ) {
     this.cprint(text, color, stream)!;
 
-    ushort[3] nl = {'\r', '\n', 0x00};
+    ushort[3] nl = { '\r', '\n', 0x00 };
     this.print((EfiString)&nl)!;
 }
 
@@ -86,10 +98,104 @@ fn void! Console.cprintln(
 fn EfiStatus! Console.printf(
     Console *this,
     EfiString text,
+    any*... args
+) {
+    EfiString formatted_text = _printf(text, ...args)!;
+    defer free(formatted_text);
+
+    return this.print(formatted_text);
+}
+
+
+fn EfiStatus! Console.fprintf(
+    Console *this,
+    SimpleTextOutputProtocol *stream,
+    EfiString text,
     args...
 ) {
-    // TODO.
-    return this.print(text);
+    EfiString formatted_text = _printf(text, ...args)!;
+    defer free(formatted_text);
+
+    return this.print(formatted_text, stream);
+}
+
+
+fn EfiStatus! Console.cprintf(
+    Console *this,
+    ConsoleColor color,
+    EfiString text,
+    args...
+) {
+    EfiString formatted_text = _printf(text, ...args)!;
+    defer free(formatted_text);
+
+    return this.cprint(formatted_text, color);
+}
+
+
+fn EfiStatus! Console.cfprintf(
+    Console *this,
+    ConsoleColor color,
+    SimpleTextOutputProtocol *stream,
+    EfiString text,
+    args...
+) {
+    EfiString formatted_text = _printf(text, ...args)!;
+    defer free(formatted_text);
+
+    return this.cprint(formatted_text, color, stream);
+}
+
+
+fn EfiStatus! Console.printe(
+    Console *this,
+    EfiString text,
+    any*... args
+) {
+    EfiString formatted_text = _expandf(text, ...args)!;
+    defer free(formatted_text);
+
+    return this.print(formatted_text);
+}
+
+
+fn EfiStatus! Console.fprinte(
+    Console *this,
+    SimpleTextOutputProtocol *stream,
+    EfiString text,
+    args...
+) {
+    EfiString formatted_text = _expandf(text, ...args)!;
+    defer free(formatted_text);
+
+    return this.print(formatted_text, stream);
+}
+
+
+fn EfiStatus! Console.cprinte(
+    Console *this,
+    ConsoleColor color,
+    EfiString text,
+    args...
+) {
+    EfiString formatted_text = _expandf(text, ...args)!;
+    defer free(formatted_text);
+
+    return this.cprint(formatted_text, color);
+}
+
+
+fn EfiStatus! Console.cfprinte(
+    Console *this,
+    ConsoleColor color,
+    SimpleTextOutputProtocol *stream,
+    EfiString text,
+    args...
+) {
+    EfiString formatted_text = _expandf(text, ...args)!;
+    defer free(formatted_text);
+
+    return this.cprint(formatted_text, color, stream);
 }
 
 
@@ -110,3 +216,4 @@ fn void! Console.clear(
     /* Reset the cursor position if specified. */
     if (reset_cursor) efi_error(this.stdout.set_cursor_position(this.stdout, 0, 0))!;
 }
+

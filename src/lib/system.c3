@@ -50,13 +50,27 @@ fn void System.stall(
     gBS.stall(duration);
 }
 
+fn void stall(usz duration) @export("stall") @builtin => efi_sys.stall(duration);
 
-fn void! System.free(
+
+fn void System.free(
+    System *this,
+    void *pool
+) {
+    if (null != pool) gBS.free_pool(pool);
+}
+
+fn void free(void *pool) @export("free") @builtin => efi_sys.free(pool);
+
+
+fn void! System.free_safe(
     System *this,
     void *pool
 ) {
     if (null != pool) efi_error(gBS.free_pool(pool))!;
 }
+
+fn void! free_safe(void *pool) @export("free_safe") @builtin => efi_sys.free_safe(pool);
 
 
 fn void*! System.malloc(
@@ -69,6 +83,8 @@ fn void*! System.malloc(
 
     return res;
 }
+
+fn void*! malloc(usz size) @export("malloc") @builtin => efi_sys.malloc(size);
 
 
 fn void*! System.calloc(
@@ -83,6 +99,8 @@ fn void*! System.calloc(
     return p;
 }
 
+fn void*! calloc(usz num, usz size) @export("calloc") @builtin => efi_sys.calloc(num * size);
+
 
 fn void! System.memset(
     System *this,
@@ -95,6 +113,8 @@ fn void! System.memset(
     gBS.set_mem(at, length, value);
 }
 
+fn void! memset(void *at, char c, usz len) @export("memset") @builtin => efi_sys.memset(at, c, len);
+
 
 fn void System.memcpy(
     System *this,
@@ -106,6 +126,8 @@ fn void System.memcpy(
 
     gBS.copy_mem(to, from, length);
 }
+
+fn void memcpy(void *d, void *s, usz len) @export("memcpy") @builtin => efi_sys.memcpy(d, s, len);
 
 
 fn void*! System.realloc(
@@ -126,3 +148,5 @@ fn void*! System.realloc(
 
     return new_pool;
 }
+
+fn void*! realloc(void *p, usz plen, usz nlen) @export("realloc") @builtin => efi_sys.realloc(p, plen, nlen);
