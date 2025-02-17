@@ -19,12 +19,12 @@ distinct EfiHandle = void*;
 /*
  * All UEFI strings are wchar_t strings (Wide-Char types).
  */
-distinct EfiString = ushort*;
+def EfiString = ushort*;
 
 /*
  * ... But ASCII strings can also be used and dynamically converted to wide ones.
  */
-distinct String = char*;
+def AsciiString = char*;
 
 /*
  * EFI_EVENT alias (sec 7.1.1 of the UEFI 2.11 specification).

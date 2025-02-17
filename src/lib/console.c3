@@ -62,11 +62,11 @@ fn EfiStatus! Console.println(
     this.print(text, stream)!;
 
     ushort[3] nl = { '\r', '\n', 0x00 };
-    this.print((EfiString)&nl, stream)!;
+    return this.print((EfiString)&nl, stream)!;
 }
 
 
-fn void! Console.cprint(
+fn EfiStatus! Console.cprint(
     Console *this,
     EfiString text,
     ConsoleColor color,
@@ -79,10 +79,12 @@ fn void! Console.cprint(
     stream.set_attribute(stream, (usz)(char)color);
     EfiStatus! status = this.print(text, stream);
     stream.set_attribute(stream, previous_attr);
+
+    return status;
 }
 
 
-fn void! Console.cprintln(
+fn EfiStatus! Console.cprintln(
     Console *this,
     EfiString text,
     ConsoleColor color,
@@ -91,16 +93,16 @@ fn void! Console.cprintln(
     this.cprint(text, color, stream)!;
 
     ushort[3] nl = { '\r', '\n', 0x00 };
-    this.print((EfiString)&nl)!;
+    return this.print((EfiString)&nl);
 }
 
 
 fn EfiStatus! Console.printf(
     Console *this,
     EfiString text,
-    any*... args
+    args...
 ) {
-    EfiString formatted_text = _printf(text, ...args)!;
+    EfiString formatted_text = _printf(text, args)!;
     defer free(formatted_text);
 
     return this.print(formatted_text);
@@ -113,7 +115,7 @@ fn EfiStatus! Console.fprintf(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _printf(text, ...args)!;
+    EfiString formatted_text = _printf(text, args)!;
     defer free(formatted_text);
 
     return this.print(formatted_text, stream);
@@ -126,7 +128,7 @@ fn EfiStatus! Console.cprintf(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _printf(text, ...args)!;
+    EfiString formatted_text = _printf(text, args)!;
     defer free(formatted_text);
 
     return this.cprint(formatted_text, color);
@@ -140,7 +142,7 @@ fn EfiStatus! Console.cfprintf(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _printf(text, ...args)!;
+    EfiString formatted_text = _printf(text, args)!;
     defer free(formatted_text);
 
     return this.cprint(formatted_text, color, stream);
@@ -150,9 +152,9 @@ fn EfiStatus! Console.cfprintf(
 fn EfiStatus! Console.printe(
     Console *this,
     EfiString text,
-    any*... args
+    args...
 ) {
-    EfiString formatted_text = _expandf(text, ...args)!;
+    EfiString formatted_text = _expandf(text, args)!;
     defer free(formatted_text);
 
     return this.print(formatted_text);
@@ -165,7 +167,7 @@ fn EfiStatus! Console.fprinte(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _expandf(text, ...args)!;
+    EfiString formatted_text = _expandf(text, args)!;
     defer free(formatted_text);
 
     return this.print(formatted_text, stream);
@@ -178,7 +180,7 @@ fn EfiStatus! Console.cprinte(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _expandf(text, ...args)!;
+    EfiString formatted_text = _expandf(text, args)!;
     defer free(formatted_text);
 
     return this.cprint(formatted_text, color);
@@ -192,7 +194,7 @@ fn EfiStatus! Console.cfprinte(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _expandf(text, ...args)!;
+    EfiString formatted_text = _expandf(text, args)!;
     defer free(formatted_text);
 
     return this.cprint(formatted_text, color, stream);
@@ -216,4 +218,3 @@ fn void! Console.clear(
     /* Reset the cursor position if specified. */
     if (reset_cursor) efi_error(this.stdout.set_cursor_position(this.stdout, 0, 0))!;
 }
-
