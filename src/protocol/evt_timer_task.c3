@@ -4,7 +4,7 @@ import uefi;
 
 /* 7.1.) Event, Timer, and Task Priority Services */
 /* NOTE: EfiEvent is defined in ../def.c3, as it's more globally used. */
-distinct EventType = uint;
+typedef EventType = uint;
 const EventType EVT_TIMER               = 0x8000_0000;
 const EventType EVT_RUNTIME             = 0x4000_0000;
 const EventType EVT_NOTIFY_WAIT         = 0x0000_0100;
@@ -14,13 +14,13 @@ const EventType EVT_SIGNAL_VIRTUAL_ADDRESS_CHANGE    = 0x6000_0202;
 
 
 /* EFI_EVENT_NOTIFY (7.1.1) */
-def FnEventNotify = fn void(EfiEvent, void*);
+alias FnEventNotify = fn void(EfiEvent, void*);
 
 /* EFI_CREATE_EVENT (7.1.1) */
-def FnCreateEvent = fn EfiStatus(EventType, EventTpl, FnEventNotify, void*, EfiEvent*);
+alias FnCreateEvent = fn EfiStatus(EventType, EventTpl, FnEventNotify, void*, EfiEvent*);
 
 /* EFI_CREATE_EVENT_EX (7.1.2) */
-def FnCreateEventEx = fn EfiStatus(EventType, EventTpl, FnEventNotify, void*, EfiGuid*, EfiEvent*);
+alias FnCreateEventEx = fn EfiStatus(EventType, EventTpl, FnEventNotify, void*, EfiGuid*, EfiEvent*);
 
 /* EFI event group GUIDs (7.1.2) */
 const EfiGuid EVENT_GROUP_EXIT_BOOT_SERVICES =
@@ -39,19 +39,19 @@ const EfiGuid EVENT_GROUP_RESET_SYSTEM =
     { 0x62da6a56, 0x13fb, 0x485a, {0xa8,0xda,0xa3,0xdd,0x79,0x12,0xcb,0x6b} };
 
 /* EFI_CLOSE_EVENT (7.1.3) */
-def FnCloseEvent = fn EfiStatus(EfiEvent);
+alias FnCloseEvent = fn EfiStatus(EfiEvent);
 
 /* EFI_SIGNAL_EVENT (7.1.4) */
-def FnSignalEvent = fn EfiStatus(EfiEvent);
+alias FnSignalEvent = fn EfiStatus(EfiEvent);
 
 /* EFI_WAIT_FOR_EVENT (7.1.5) */
-def FnWaitForEvent = fn EfiStatus(usz, EfiEvent*, usz*);
+alias FnWaitForEvent = fn EfiStatus(usz, EfiEvent*, usz*);
 
 /* EFI_CHECK_EVENT (7.1.6) */
-def FnCheckEvent = fn EfiStatus(EfiEvent);
+alias FnCheckEvent = fn EfiStatus(EfiEvent);
 
 /* EFI_SET_TIMER (7.1.7) and EFI_TIMER_DELAY */
-def FnSetTimer = fn EfiStatus(EfiEvent, TimerDelay, ulong);
+alias FnSetTimer = fn EfiStatus(EfiEvent, TimerDelay, ulong);
 
 enum TimerDelay
 {
@@ -61,13 +61,13 @@ enum TimerDelay
 }
 
 /* EFI_RAISE_TPL (7.1.8) and TPL */
-def FnRaiseTpl = fn EventTpl(EventTpl);
+alias FnRaiseTpl = fn EventTpl(EventTpl);
 
-distinct EventTpl  = usz;
+typedef EventTpl  = usz;
 const EventTpl TPL_APPLICATION  = 4;
 const EventTpl TPL_CALLBACK     = 8;
 const EventTpl TPL_NOTIFY       = 16;
 const EventTpl TPL_HIGH_LEVEL   = 31;
 
 /* EFI_RESTORE_TPL (7.1.9) */
-def FnRestoreTpl = fn void(EventTpl);
+alias FnRestoreTpl = fn void(EventTpl);

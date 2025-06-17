@@ -21,9 +21,9 @@ bitstruct ConsoleColor : char
 module uefi::efilib::efi_console;
 import uefi;
 
-fn Console*! new()
+fn Console*? new()
 {
-    if (!efilib::initialized) return EfiError.EFILIB_UNINITIALIZED?;
+    if (!efilib::initialized) return efi_error::EFILIB_UNINITIALIZED?;
 
     Console *new_console;
     efi_error(
@@ -42,7 +42,7 @@ fn Console*! new()
 module uefi::efilib;
 import uefi;
 
-fn EfiStatus! Console.print(
+fn EfiStatus? Console.print(
     Console *this,
     EfiString text,
     SimpleTextOutputProtocol *stream = null
@@ -54,19 +54,19 @@ fn EfiStatus! Console.print(
 }
 
 
-fn EfiStatus! Console.println(
+fn EfiStatus? Console.printn(
     Console *this,
     EfiString text,
     SimpleTextOutputProtocol *stream = null
 ) {
     this.print(text, stream)!;
 
-    ushort[3] nl = { '\r', '\n', 0x00 };
+    ushort[3] nl = { '\r', '\n', 0 };
     return this.print((EfiString)&nl, stream)!;
 }
 
 
-fn EfiStatus! Console.cprint(
+fn EfiStatus? Console.cprint(
     Console *this,
     EfiString text,
     ConsoleColor color,
@@ -77,14 +77,14 @@ fn EfiStatus! Console.cprint(
     usz previous_attr = stream.mode.current_attribute;
 
     stream.set_attribute(stream, (usz)(char)color);
-    EfiStatus! status = this.print(text, stream);
+    EfiStatus? status = this.print(text, stream);
     stream.set_attribute(stream, previous_attr);
 
     return status;
 }
 
 
-fn EfiStatus! Console.cprintln(
+fn EfiStatus? Console.cprintn(
     Console *this,
     EfiString text,
     ConsoleColor color,
@@ -97,7 +97,7 @@ fn EfiStatus! Console.cprintln(
 }
 
 
-fn EfiStatus! Console.printf(
+fn EfiStatus? Console.printf(
     Console *this,
     EfiString text,
     args...
@@ -109,7 +109,7 @@ fn EfiStatus! Console.printf(
 }
 
 
-fn EfiStatus! Console.fprintf(
+fn EfiStatus? Console.fprintf(
     Console *this,
     SimpleTextOutputProtocol *stream,
     EfiString text,
@@ -122,7 +122,7 @@ fn EfiStatus! Console.fprintf(
 }
 
 
-fn EfiStatus! Console.cprintf(
+fn EfiStatus? Console.cprintf(
     Console *this,
     ConsoleColor color,
     EfiString text,
@@ -135,7 +135,7 @@ fn EfiStatus! Console.cprintf(
 }
 
 
-fn EfiStatus! Console.cfprintf(
+fn EfiStatus? Console.cfprintf(
     Console *this,
     ConsoleColor color,
     SimpleTextOutputProtocol *stream,
@@ -149,7 +149,7 @@ fn EfiStatus! Console.cfprintf(
 }
 
 
-fn EfiStatus! Console.printe(
+fn EfiStatus? Console.printe(
     Console *this,
     EfiString text,
     args...
@@ -161,7 +161,7 @@ fn EfiStatus! Console.printe(
 }
 
 
-fn EfiStatus! Console.fprinte(
+fn EfiStatus? Console.fprinte(
     Console *this,
     SimpleTextOutputProtocol *stream,
     EfiString text,
@@ -174,7 +174,7 @@ fn EfiStatus! Console.fprinte(
 }
 
 
-fn EfiStatus! Console.cprinte(
+fn EfiStatus? Console.cprinte(
     Console *this,
     ConsoleColor color,
     EfiString text,
@@ -187,7 +187,7 @@ fn EfiStatus! Console.cprinte(
 }
 
 
-fn EfiStatus! Console.cfprinte(
+fn EfiStatus? Console.cfprinte(
     Console *this,
     ConsoleColor color,
     SimpleTextOutputProtocol *stream,
@@ -201,7 +201,7 @@ fn EfiStatus! Console.cfprinte(
 }
 
 
-fn void! Console.clear(
+fn void? Console.clear(
     Console *this,
     ConsoleColor color,
     bool preserve_attr = false,

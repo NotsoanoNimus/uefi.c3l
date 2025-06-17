@@ -15,18 +15,15 @@ System *efi_sys @export("efi_sys") @builtin = null;
 
 <*
     Initialize the UEFI C3 library. This call should be made immediately upon EFI entry.
-
-    @param [&in] image "The input EFI_IMAGE handle to the EFI application"
-    @param [&in] st "A reference to the system table provided to the EFI application"
+    @param [&in] image: "The input EFI_IMAGE handle to the EFI application"
+    @param [&in] st: "A reference to the system table provided to the EFI application"
     @return "Whether the library was successfully initialized."
 *>
-fn bool! init(
+fn bool? init(
     EfiHandle image,
     SystemTable *st
 ) {
-    EfiStatus result = SUCCESS;
-
-    if (null == (void *)image || null == (void *)st) return EfiError.LOAD_ERROR?;
+    if (null == (void *)image || null == (void *)st) return efi_error::LOAD_ERROR?;
 
     gST = st;
     gBS = st.boot_services;

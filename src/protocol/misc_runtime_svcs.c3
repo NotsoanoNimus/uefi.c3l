@@ -4,7 +4,7 @@ import uefi;
 
 /* 8.5.) Miscellaneous Runtime services */
 /* 8.5.1.1.) ResetSystem() */
-def FnResetSystem = fn void(ResetType, EfiStatus, usz, void*);
+alias FnResetSystem = fn void(ResetType, EfiStatus, usz, void*);
 
 enum ResetType : uint
 {
@@ -15,10 +15,10 @@ enum ResetType : uint
 }
 
 /* 8.5.2.1.) GetNextHighMonotonicCount() */
-def FnGetNextHighMonotonicCount = fn EfiStatus(uint*);
+alias FnGetNextHighMonotonicCount = fn EfiStatus(uint*);
 
 /* 8.5.3.1.) UpdateCapsule() and related */
-def FnUpdateCapsule = fn EfiStatus(CapsuleHeader**, usz, PhysicalAddress);
+alias FnUpdateCapsule = fn EfiStatus(CapsuleHeader**, usz, PhysicalAddress);
 
 struct CapsuleHeader
 {
@@ -69,7 +69,7 @@ struct MemoryRangeCapsuleResult
 }
 
 /* 8.5.3.4.) QueryCapsuleCapabilities() */
-def FnQueryCapsuleCapabilities = fn EfiStatus(CapsuleHeader**, usz, ulong*, ResetType*);
+alias FnQueryCapsuleCapabilities = fn EfiStatus(CapsuleHeader**, usz, ulong*, ResetType*);
 
 /* OS Indications from a nearby section */
 enum OsIndications : ulong (ulong raw)   // TODO: Change to inline ulong once supported

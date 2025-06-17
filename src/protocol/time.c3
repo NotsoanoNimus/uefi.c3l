@@ -4,7 +4,7 @@ import uefi;
 
 /* 8.3.) Time services */
 /* 8.3.1.) GetTime() */
-def FnGetTime = fn EfiStatus(EfiTime*, EfiTimeCapabilities*);
+alias FnGetTime = fn EfiStatus(EfiTime*, EfiTimeCapabilities*);
 
 struct TimeCapabilities
 {
@@ -14,10 +14,10 @@ struct TimeCapabilities
 }
 
 /* 8.3.2.) SetTime() */
-def FnSetTime = fn EfiStatus(EfiTime*);
+alias FnSetTime = fn EfiStatus(EfiTime*);
 
 /* 8.3.3.) GetWakeupTime() */
-def FnGetWakeupTime = fn EfiStatus(bool*, bool*, EfiTime*);
+alias FnGetWakeupTime = fn EfiStatus(bool*, bool*, EfiTime*);
 
 /* 8.3.4.) SetWakeupTime() */
-def FnSetWakeupTime = fn EfiStatus(bool, EfiTime*);
+alias FnSetWakeupTime = fn EfiStatus(bool, EfiTime*);
