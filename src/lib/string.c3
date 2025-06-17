@@ -32,7 +32,7 @@ fn EfiString? ascii_to_wide(AsciiString str)
 {
     if (null == (void *)str.ptr || 0 == str[0]) return efi_error::INVALID_PARAMETER?;
 
-    EfiString ret = wslice_from_raw(malloc(ushort.sizeof * (str.len + 1))!, str.len + 1);
+    EfiString ret = wslice_from_raw(calloc(ushort.sizeof, str.len + 1)!, str.len + 1);
 
     for (int i = 0; i < str.len; ++i) ret[i] = (ushort)str[i];
     ret[^1] = 0;
@@ -46,7 +46,7 @@ fn AsciiString? wide_to_ascii(EfiString str)
 {
     if (null == (void *)str.ptr || 0 == str[0]) return efi_error::INVALID_PARAMETER?;
 
-    AsciiString ret = slice_from_raw(malloc(str.len + 1)!, str.len + 1);
+    AsciiString ret = slice_from_raw(calloc(1, str.len + 1)!, str.len + 1);
 
     for (int i = 0; i < str.len; ++i) ret[i] = (char)str[i];   /* lossy */
     ret[^1] = 0;
@@ -61,9 +61,10 @@ fn EfiString? wide_strdup(EfiString str)
     if (null == (void *)str.ptr) return efi_error::INVALID_PARAMETER?;
     if (0 == str.len) return a2w({0});
 
-    EfiString ret = wslice_from_raw(malloc(str.bytes() + ushort.sizeof)!, str.len);
+    usz str_len = wide_strlen(str.ptr)!;
+    EfiString ret = wslice_from_raw(calloc(ushort.sizeof, (str_len + 1))!, str_len + 1);
 
-    efi_sys.memcpy(ret, str, str.bytes());
+    efi_sys.memcpy(ret, str, str_len * ushort.sizeof);
     ret[^1] = 0;
 
     return ret;
@@ -89,13 +90,15 @@ fn EfiString? wide_strcat(EfiString str, EfiString addl)
 {
     if (null == (void *)str.ptr || null == (void *)addl.ptr) return efi_error::INVALID_PARAMETER?;
 
-    usz new_len = str.bytes() + addl.bytes() + 1;
+    usz str_size = wide_strlen(str.ptr)! * ushort.sizeof;
+    usz addl_size = wide_strlen(addl.ptr)! * ushort.sizeof;
+    usz new_size = str_size + addl_size + ushort.sizeof;
 
-    void *buff = malloc(new_len)!;
-    memcpy(buff, str.ptr, str.bytes());
-    memcpy((void *)((uptr)buff + str.bytes()), addl.ptr, addl.bytes());
+    void *buff = malloc(new_size)!;
+    wstrcpy(buff, str)!;
+    memcpy((void *)((uptr)buff + str_size), addl.ptr, addl_size);
 
-    EfiString reinterp = wslice_from_raw(buff, new_len/ushort.sizeof);
+    EfiString reinterp = wslice_from_raw(buff, new_size / ushort.sizeof);
     reinterp[^1] = 0;
 
     return reinterp;
@@ -107,9 +110,29 @@ fn AsciiString? ascii_strcat(AsciiString str, AsciiString addl)
 {
     if (null == (void *)str || null == (void *)addl) return efi_error::INVALID_PARAMETER?;
 
-    efi_sys.memcpy((void *)((uptr)str.ptr + str.len), addl, addl.len);
+    memcpy((void *)((uptr)str.ptr + str.len), addl, addl.len);
 
     return str;
+}
+
+
+fn void? wide_strcpy(void *to, EfiString from)
+    @export("wstrcpy")
+{
+    if (null == (void *)from.ptr || null == to) return efi_error::INVALID_PARAMETER?;
+
+    memcpy(to, from.ptr, from.bytes());
+    ((EfiStringRaw)to)[from.len - 1] = 0;
+}
+
+
+fn void? ascii_strcpy(void *to, AsciiString from)
+    @export("strcpy")
+{
+    if (null == (void *)from.ptr || null == to) return efi_error::INVALID_PARAMETER?;
+
+    memcpy(to, from.ptr, from.bytes());
+    ((AsciiStringRaw)to)[from.len - 1] = 0;
 }
 
 
@@ -120,11 +143,13 @@ fn usz AsciiString.bytes(&self) => (self.len - 1) * char.sizeof;
 macro usz? wstrlen(EfiStringRaw rawptr) @builtin => wide_strlen(rawptr);
 macro EfiString? wstrdup(EfiString str) @builtin => wide_strdup(str);
 macro EfiString? wstrcat(EfiString str, EfiString addl) @builtin => wide_strcat(str, addl);
+macro void? wstrcpy(void *into, EfiString from) @builtin => wide_strcpy(into, from);
 macro AsciiString? w2a(EfiString c) @builtin => wide_to_ascii(c);
 
 macro usz? strlen(AsciiStringRaw rawptr) @builtin => ascii_strlen(rawptr);
 macro AsciiString? strdup(AsciiString str) @builtin => ascii_strdup(str);
 macro AsciiString? strcat(AsciiString str, AsciiString addl) @builtin => ascii_strcat(str, addl);
+macro void? strcpy(void *into, AsciiString from) @builtin => ascii_strcpy(into, from);
 macro EfiString? a2w(AsciiString c) @builtin => ascii_to_wide(c);
 
 macro EfiString wslice_from_raw(void *rawptr, usz length) @builtin => ((EfiStringRaw)rawptr)[:length];

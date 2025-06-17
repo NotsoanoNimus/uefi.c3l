@@ -86,8 +86,8 @@ fn EfiStatus? Console.cprint(
 
 fn EfiStatus? Console.cprintn(
     Console *this,
-    EfiString text,
     ConsoleColor color,
+    EfiString text,
     SimpleTextOutputProtocol *stream = null
 ) {
     this.cprint(text, color, stream)!;
@@ -102,7 +102,7 @@ fn EfiStatus? Console.printf(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _printf(text, args)!;
+    EfiString formatted_text = _printf(text, ...args)!;
     defer free(formatted_text);
 
     return this.print(formatted_text);
@@ -115,7 +115,7 @@ fn EfiStatus? Console.fprintf(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _printf(text, args)!;
+    EfiString formatted_text = _printf(text, ...args)!;
     defer free(formatted_text);
 
     return this.print(formatted_text, stream);
@@ -128,7 +128,7 @@ fn EfiStatus? Console.cprintf(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _printf(text, args)!;
+    EfiString formatted_text = _printf(text, ...args)!;
     defer free(formatted_text);
 
     return this.cprint(formatted_text, color);
@@ -142,7 +142,7 @@ fn EfiStatus? Console.cfprintf(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _printf(text, args)!;
+    EfiString formatted_text = _printf(text, ...args)!;
     defer free(formatted_text);
 
     return this.cprint(formatted_text, color, stream);
@@ -154,7 +154,7 @@ fn EfiStatus? Console.printe(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _expandf(text, args)!;
+    EfiString formatted_text = _expandf(text, ...args)!;
     defer free(formatted_text);
 
     return this.print(formatted_text);
@@ -167,23 +167,19 @@ fn EfiStatus? Console.fprinte(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _expandf(text, args)!;
+    EfiString formatted_text = _expandf(text, ...args)!;
     defer free(formatted_text);
 
     return this.print(formatted_text, stream);
 }
 
 
-fn EfiStatus? Console.cprinte(
-    Console *this,
-    ConsoleColor color,
-    EfiString text,
-    args...
-) {
-    EfiString formatted_text = _expandf(text, args)!;
+fn EfiStatus? Console.cprinte(&self, ConsoleColor color, EfiString text, args...)
+{
+    EfiString formatted_text = _expandf(text, ...args)!;
     defer free(formatted_text);
 
-    return this.cprint(formatted_text, color);
+    return self.cprint(formatted_text, color);
 }
 
 
@@ -194,7 +190,7 @@ fn EfiStatus? Console.cfprinte(
     EfiString text,
     args...
 ) {
-    EfiString formatted_text = _expandf(text, args)!;
+    EfiString formatted_text = _expandf(text, ...args)!;
     defer free(formatted_text);
 
     return this.cprint(formatted_text, color, stream);
@@ -218,3 +214,29 @@ fn void? Console.clear(
     /* Reset the cursor position if specified. */
     if (reset_cursor) efi_error(this.stdout.set_cursor_position(this.stdout, 0, 0))!;
 }
+
+
+
+
+module uefi::io;
+import uefi;
+
+
+macro EfiStatus? @memdump(void *ptr, usz len) @maydiscard => efi_sys.console.printn(a2w(memdump(ptr, len)));
+macro EfiStatus? @cmemdump(ConsoleColor $color, void *ptr, usz len) @maydiscard => efi_sys.console.cprintn($color, a2w(memdump(ptr, len)));
+
+macro void? @clear(ConsoleColor $color) @maydiscard => efi_sys.console.clear($color);
+
+macro EfiStatus? @wprint(EfiString str) @maydiscard => efi_sys.console.print(str);
+macro EfiStatus? @wprintn(EfiString str) @maydiscard => efi_sys.console.printn(str);
+macro EfiStatus? @wprinte(EfiString str, args...) @maydiscard => efi_sys.console.printn(str, ...args);
+macro EfiStatus? @print(AsciiString str) @maydiscard => efi_sys.console.print(a2w(str));
+macro EfiStatus? @printn(AsciiString str) @maydiscard => efi_sys.console.printn(a2w(str));
+macro EfiStatus? @printe(AsciiString str, args...) @maydiscard => efi_sys.console.printn(a2w(str), ...args);
+
+macro EfiStatus? @wcprint(ConsoleColor $color, EfiString str) @maydiscard => efi_sys.console.cprint($color, str);
+macro EfiStatus? @wcprintn(ConsoleColor $color, EfiString str) @maydiscard => efi_sys.console.cprintn($color, str);
+macro EfiStatus? @wcprinte(ConsoleColor $color, EfiString str, args...) @maydiscard => efi_sys.console.cprinte($color, str, ...args);
+macro EfiStatus? @cprint(ConsoleColor $color, AsciiString str) @maydiscard => efi_sys.console.cprint($color, a2w(str));
+macro EfiStatus? @cprintn(ConsoleColor $color, AsciiString str) @maydiscard => efi_sys.console.cprintn($color, a2w(str));
+macro EfiStatus? @cprinte(ConsoleColor $color, AsciiString str, args...) @maydiscard => efi_sys.console.cprinte($color, a2w(str), ...args);
