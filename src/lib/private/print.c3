@@ -56,7 +56,7 @@ fn EfiString? _printf(
 
     while OUTER: (tmp[read_idx]) {
         ushort c = tmp[read_idx];
-        
+
         if (0 == c) break;
 
         if ((ushort)'%' != c) {
@@ -179,7 +179,7 @@ fn void? _expand_arg(
         case void:
             expansion = a2w("pointer")!;//_pointer_to_str(value);
         default: return;
-            return efi_error::INVALID_PARAMETER?;
+            //return efi_error::INVALID_PARAMETER?;
     }
 
     if (null == (void *)expansion) return;   // do nothing on empty expansions

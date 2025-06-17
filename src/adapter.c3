@@ -3,7 +3,7 @@ module uefi::adapter @private;
 
 /* Create a memcpy symbol to use globally when building applications. */
 fn void *memcpy(void *dst, void *src, usz len)
-    @export("memcpy")
+//    @export("memcpy")
 {
     if (null == dst || null == src || 0 == len) return null;
 
@@ -24,7 +24,7 @@ fn void *memcpy(void *dst, void *src, usz len)
 
 
 fn void *memset(void *at, char value, usz len)
-    @export("memset")
+//    @export("memset")
 {
     if (null == at || 0 == len) return null;
 

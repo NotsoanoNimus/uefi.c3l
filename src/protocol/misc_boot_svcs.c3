@@ -4,7 +4,7 @@ import uefi;
 
 /* 7.5) Miscellaneous Boot Services */
 /* EFI_SET_WATCHDOG_TIMER (7.5.1) */
-alias FnSetWatchdogTimer = fn EfiStatus(usz, ulong, usz, EfiString);
+alias FnSetWatchdogTimer = fn EfiStatus(usz, ulong, usz, EfiStringRaw);
 
 /* EFI_STALL (7.5.2) */
 alias FnStall = fn EfiStatus(usz);

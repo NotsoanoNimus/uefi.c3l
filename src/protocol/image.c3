@@ -12,7 +12,7 @@ alias FnLoadImage = fn EfiStatus(bool, EfiHandle, void*, void*, usz, EfiHandle*)
 alias HiiPackageListHeader = hii::PackageListProtocol;*/
 
 /* EFI_IMAGE_START (7.4.2) */
-alias FnStartImage = fn EfiStatus(EfiHandle, usz*, EfiString*);
+alias FnStartImage = fn EfiStatus(EfiHandle, usz*, EfiStringRaw*);
 
 /* EFI_IMAGE_UNLOAD (7.4.3) */
 alias FnUnloadImage = fn EfiStatus(EfiHandle);
@@ -21,7 +21,7 @@ alias FnUnloadImage = fn EfiStatus(EfiHandle);
 alias FnImageEntryPoint = fn EfiStatus(EfiHandle, SystemTable*);
 
 /* EFI_EXIT (7.4.5) */
-alias FnExitImage = fn EfiStatus(EfiHandle, EfiStatus, usz, EfiString);
+alias FnExitImage = fn EfiStatus(EfiHandle, EfiStatus, usz, EfiStringRaw);
 
 /* EFI_EXIT_BOOT_SERVICES (7.4.6) */
 alias FnExitBootServices = fn EfiStatus(EfiHandle, usz);

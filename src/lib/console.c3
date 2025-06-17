@@ -10,7 +10,7 @@ struct Console
 }
 
 
-bitstruct ConsoleColor : char
+bitstruct ConsoleColor : char @bigendian
 {
     TextColor background: 0..3;
     TextColor foreground: 4..7;   /* NOTE: bit '7' is technically not used per spec */

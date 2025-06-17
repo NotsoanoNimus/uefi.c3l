@@ -4,7 +4,7 @@ import uefi;
 
 /* 8.2.) Variable services */
 /* 8.2.1.) GetVariable() */
-alias FnGetVariable = fn EfiStatus(EfiString, EfiGuid*, uint*, usz*, void*);
+alias FnGetVariable = fn EfiStatus(EfiStringRaw, EfiGuid*, uint*, usz*, void*);
 
 /* Variable Attributes */
 enum EfiVarAttr : uint (uint raw)   // TODO: Add `inline` inside parens when supported
@@ -28,10 +28,10 @@ struct VariableAuthentication3CertId
 }
 
 /* 8.2.2.) GetNextVariableName() */
-alias FnGetNextVariableName = fn EfiStatus(usz*, EfiString, EfiGuid*);
+alias FnGetNextVariableName = fn EfiStatus(usz*, EfiStringRaw, EfiGuid*);
 
 /* 8.2.3.) SetVariable() */
-alias FnSetVariable = fn EfiStatus(EfiString, EfiGuid*, uint, usz, void*);
+alias FnSetVariable = fn EfiStatus(EfiStringRaw, EfiGuid*, uint, usz, void*);
 
 /* TODO: Too much extra complexity to use right now. Add later. */
 /*

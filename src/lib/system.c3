@@ -42,6 +42,10 @@ fn void System.reset(
     gRS.reset_system(type, code, buffer.len, buffer.ptr);
 }
 
+fn void reset(ResetType type, EfiStatus code = SUCCESS, char[] buffer = {})
+    @export("reset") @builtin @noreturn
+    => efi_sys.reset(type, code, buffer);
+
 
 fn void System.stall(
     System *this,
@@ -112,7 +116,7 @@ fn void*? System.realloc(
         return null;
     }
 
-    void *new_pool = this.malloc(new_len)!;
+    void *new_pool = this.calloc(1, new_len)!;
 
     if (null != pool) {
         this.memcpy(new_pool, pool, @min(prev_len, new_len));
@@ -122,7 +126,7 @@ fn void*? System.realloc(
     return new_pool;
 }
 
-fn void*? realloc(void *pool, usz prev_len, usz new_len) @export("realloc") => efi_sys.realloc(pool, prev_len, new_len);
+fn void*? realloc(void *pool, usz prev_len, usz new_len) @export("realloc") @builtin => efi_sys.realloc(pool, prev_len, new_len);
 
 
 fn AsciiString? System.create_memdump(
@@ -133,7 +137,7 @@ fn AsciiString? System.create_memdump(
 ) {
     if (null == at || 0 == len) return efi_error::INVALID_PARAMETER?;
 
-    AsciiString ret = ((char *)calloc(char.sizeof, (len * 3) + 1)!)[:((len * 3) + 1)];
+    AsciiString ret = slice_from_raw(calloc(char.sizeof, (len * 3) + 1)!, (len * 3) + 1);
 
     for (usz i = 0; i < len; ++i) {
         char c = *((char *)((usz)at + i));
@@ -164,7 +168,7 @@ fn void System.memset(
     gBS.set_mem(at, length, value);
 }
 
-//fn void memset(void *at, char value, usz length) @export("memset") @builtin => efi_sys.memset(at, value, length);
+fn void memset(void *at, char value, usz length) @export("memset") @builtin => efi_sys.memset(at, value, length);
 
 
 fn void System.memcpy(
@@ -178,8 +182,8 @@ fn void System.memcpy(
     gBS.copy_mem(to, from, length);
 }
 
-//fn void *memcpy(void *into, void *from, usz length) @export("memcpy") @builtin
-//{
-//    efi_sys.memcpy(into, from, length);
-//    return into;
-//}
+fn void *memcpy(void *into, void *from, usz length) @export("memcpy") @builtin
+{
+    efi_sys.memcpy(into, from, length);
+    return into;
+}

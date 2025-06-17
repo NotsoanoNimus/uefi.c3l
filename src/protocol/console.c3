@@ -58,8 +58,8 @@ struct TextMode
 }
 
 alias FnOutputReset = fn EfiStatus(SimpleTextOutputProtocol*, bool);
-alias FnOutputString = fn EfiStatus(SimpleTextOutputProtocol*, EfiString);
-alias FnOutputTestString = fn EfiStatus(SimpleTextOutputProtocol*, EfiString);
+alias FnOutputString = fn EfiStatus(SimpleTextOutputProtocol*, EfiStringRaw);
+alias FnOutputTestString = fn EfiStatus(SimpleTextOutputProtocol*, EfiStringRaw);
 alias FnOutputQueryMode = fn EfiStatus(SimpleTextOutputProtocol*, usz, usz*, usz*);
 alias FnOutputSetMode = fn EfiStatus(SimpleTextOutputProtocol*, usz);
 alias FnOutputSetAttribute = fn EfiStatus(SimpleTextOutputProtocol*, usz);

@@ -103,8 +103,8 @@ struct CapsuleResultVariableFMP
     char        payload_index;
     char        update_image_index;
     EfiGuid     update_image_type_id;
-    /* implied:  EfiString capsule_file_name */
-    /* implied:  EfiString capsule_target */
+    /* implied:  EfiStringRaw capsule_file_name */
+    /* implied:  EfiStringRaw capsule_target */
 }
 
 struct CapsuleResultVariableJson
