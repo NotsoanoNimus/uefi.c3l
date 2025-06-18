@@ -41,7 +41,7 @@ enum MemoryType : uint
 alias FnFreePages = fn EfiStatus(PhysicalAddress, usz);
 
 /* EFI_GET_MEMORY_MAP (7.2.3) and related definitions */
-alias FnGetMemoryMap = fn EfiStatus(usz*, MemoryDescriptor*, usz*, usz*, uint*);
+alias FnGetMemoryMap = fn EfiStatus(usz*, void*, usz*, usz*, uint*);
 
 const uint MEMORY_DESCRIPTOR_VERSION    = 1;
 struct MemoryDescriptor
@@ -51,6 +51,16 @@ struct MemoryDescriptor
     VirtualAddress      virtual_start;
     ulong               num_pages;
     MemoryAttribute     attribute;
+}
+
+struct SystemMemoryMap
+{
+    usz map_key;
+    usz buffer_size;
+    usz descriptor_size;
+    uint descriptor_version;
+    void *descriptors;
+    usz descriptors_count;
 }
 
 typedef MemoryAttribute = ulong;

@@ -76,6 +76,12 @@ macro void @stall(usz $duration) => efi_system::efi_sys.stall($duration);
 macro void @reset(ResetType $type, EfiStatus code = SUCCESS, char[] buffer = {}) @noreturn
     => efi_system::efi_sys.reset($type, code, buffer);
 
+macro void hang() @noreturn
+{
+    sys::@disable_watchdog();
+    while (true);
+}
+
 macro bool? @set_watchdog(usz $seconds) @maydiscard => efi_system::efi_sys.set_watchdog_timer($seconds);
 macro bool? @disable_watchdog() @maydiscard => efi_system::efi_sys.set_watchdog_timer(0);
 macro bool? set_watchdog_full(usz seconds, ulong code = -1, usz data_size = 0, EfiStringRaw data = null) @maydiscard
@@ -85,6 +91,7 @@ macro ulong? get_next_monotonic_count() @maydiscard => efi_system::efi_sys.get_n
 
 macro uint? get_crc32(void *data @noalias, usz data_size) => efi_system::efi_sys.calculate_crc32(data, data_size);
 
+macro SystemMemoryMap*? get_memory_map() => efi_system::efi_sys.get_memory_map();
 
 
 // ------------------------------------------------------------------

@@ -183,3 +183,61 @@ fn AsciiString? System.create_memdump(&self, void *at, usz len, usz align = 16)
     ret[len * 3] = '\0';   // paranoia
     return ret;
 }
+
+
+fn SystemMemoryMap*? System.get_memory_map(&self)
+{
+    SystemMemoryMap *result = mem::calloc(1, SystemMemoryMap.sizeof)!;
+
+    // The first query should return a "BUFFER_TOO_SMALL" efi error, which sets 'buffer_size' to the right value.
+    EfiStatus? status = self.boot_services.get_memory_map(
+        &result.buffer_size,
+        result.descriptors,
+        &result.map_key,
+        &result.descriptor_size,
+        &result.descriptor_version
+    );
+
+    if (catch status_as_fault = status) {
+        if (efi_error::BUFFER_TOO_SMALL != status_as_fault) {
+            mem::free(result);
+            return status_as_fault?;
+        }
+    }
+
+    if (0 == result.buffer_size || 0 == result.descriptor_size) {
+        mem::free(result);
+        return efi_error::NOT_FOUND?;
+    }
+
+    // Account for the possible fragmentation/expansion of the memory map based on the below allocation.
+    /* NOTE: The size is 2x because a new AllocatePool range inserted into the middle of an existing entry will result
+        in 2 new entries: the allocation as well as the trailing region/fragment of free space. */
+    result.buffer_size += (2 * result.descriptor_size);
+
+    // Allocate the resultant buffer.
+    result.descriptors = mem::calloc(1, result.buffer_size)!;
+
+    status = self.boot_services.get_memory_map(
+        &result.buffer_size,
+        result.descriptors,
+        &result.map_key,
+        &result.descriptor_size,
+        &result.descriptor_version
+    );
+    if (catch status_as_fault = status) {
+        mem::free(result.descriptors);
+        mem::free(result);
+        return status_as_fault?;
+    }
+
+    if (0 == result.buffer_size || 0 == result.descriptor_size) {
+        mem::free(result.descriptors);
+        mem::free(result);
+        return efi_error::NOT_FOUND?;
+    }
+
+    result.descriptors_count = result.buffer_size / result.descriptor_size;
+
+    return result;
+}
