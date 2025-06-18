@@ -3,86 +3,16 @@ module uefi::efilib @private;
 import uefi;
 
 
-<*
- * Traditional `printf` functionality which takes a format string
- *  and a variadic parameters list and returns a formatted string.
- *
- * Supports:
- *  %s - EfiString
- *  %a - ASCII String (String type)
- *  %d - Signed decimal value
- *  %u - Unsigned decimal value
- *  %f - Floating-point value
- *  %X - 8-byte hex value
- *  %x - hex value
- *  %c - Char16
- *  %C - ASCII char (char8)
- *  %p - Pointer
- *  %r - EFI Status code result
- *  %t - EFI time struct (from ref)
- *  %g - EFI GUID (from ref)
- *  %D - EFI Device Path
- *  %% - literal '%' sign
- *
- *>
-fn EfiString? _printf(
-    EfiString format,
-    args...
-) {
-    if (null == (void *)format) return efi_error::INVALID_PARAMETER?;
-    if (0 == args.len) return wide_strdup(format);
 
-    EfiString tmp = wide_strdup(format)!;
-    defer free(tmp);
-
-    usz base_len = (tmp.len * ushort.sizeof) + 2;
-    usz vararg_idx = 0;
-    usz scroll_idx = 0;
-    usz read_idx = 0;
-
-    EfiString ret = ((ushort *)calloc(ushort.sizeof, base_len)!)[:base_len];
-
-    while OUTER: (tmp[read_idx]) {
-        ushort c = tmp[read_idx];
-
-        if (0 == c) break;
-
-        if ((ushort)'%' != c) {
-            ret[scroll_idx] = c;
-            ++read_idx;
-            ++scroll_idx;
-            continue;
-        }
-
-        if ('%' != tmp[read_idx + 1] && vararg_idx >= args.len) return efi_error::NO_MAPPING?;
-
-        any arg = args[vararg_idx];
-        void *value = (void *)(arg.ptr);
-
-        switch (tmp[read_idx + 1]) {
-            case '\0': return efi_error::END_OF_FILE?;
-            case '%': ret[scroll_idx] = (ushort)'%';
-            case 's': {
-                EfiString s = *(EfiString *)value;
-                usz len = s.len * ushort.sizeof;
-                if (0 != len) {
-                    EfiString new_pool = ((ushort *)realloc(ret, base_len, base_len + len)!)[:base_len + len];
-                    wide_strcat(new_pool, s)!;
-                    scroll_idx += (len >> 1);
-                    base_len += len;
-                    ret = new_pool;
-                }
-                ++vararg_idx;
-            }
-            default: read_idx += 2; continue OUTER;   // Leave token as-is
-        }
-
-        ++read_idx;
-        ++scroll_idx;
-    }
-
-    return ret;
+macro EfiString? @expand_param($Type, any value, #assign_to)
+{
+    $switch $Type:
+        $case EfiString: $nextcase; $weweoifj;
+        $case ushort*:
+            #assign_to = wstrdup((EfiStringRaw)value);
+    $endswitch
 }
+
 
 
 fn EfiString? _expandf(EfiString input, args...)
@@ -90,30 +20,30 @@ fn EfiString? _expandf(EfiString input, args...)
     if (null == (void *)input.ptr) return efi_error::INVALID_PARAMETER?;
     if (0 == args.len) return wide_strdup(input);
 
-    EfiString dup = wstrdup(input)!;
     usz scroll = 0;
     usz pool_idx = 1;
     usz vararg_idx = 0;
     EfiString[32] strpool;
-    strpool[0] = dup;
+    strpool[0] = wstrdup(input)!;
+    EfiString dup = strpool[0];
 
-efi_sys.console.printn(strpool[0])!;
-efi_sys.console.printn(a2w("start"))!;
-    while (dup[scroll]) {
+    while (scroll < dup.len && 0 != dup[scroll]) {
         if ((ushort)'<' != dup[scroll]) {
             ++scroll;
             continue;
         }
 
+        // if (scroll == (dup.len - 1)) break;   // Do NOT read past the end.
+
         if ((ushort)'<' == dup[scroll + 1]) {
             dup[scroll + 1] = 0;
 
-efi_sys.console.printn(dup)!;
+            // if ((scroll + 2) == (dup.len - 1)) break;
+
+            if (pool_idx >= 64) return efi_error::OUT_OF_RESOURCES?;
             strpool[pool_idx] = dup[(scroll + 2) : wstrlen(&dup[scroll + 2])!];
             dup = strpool[pool_idx];
             ++pool_idx;
-            if (pool_idx >= 64) return efi_error::OUT_OF_RESOURCES?;
-efi_sys.console.print(a2w("next1:"))!; efi_sys.console.printn(dup)!;
 
             scroll = 0;
             continue;
@@ -122,18 +52,14 @@ efi_sys.console.print(a2w("next1:"))!; efi_sys.console.printn(dup)!;
 
             dup[scroll] = 0;
 
-efi_sys.console.print(a2w("dup2:"))!; efi_sys.console.printn(dup)!;
+            if (pool_idx >= 64-1) return efi_error::OUT_OF_RESOURCES?;
             strpool[pool_idx] = _expand_arg(args[vararg_idx])!;
-efi_sys.console.print(a2w("token:"))!; efi_sys.console.printn(strpool[pool_idx])!;
             ++vararg_idx;
             ++pool_idx;
-            if (pool_idx >= 64) return efi_error::OUT_OF_RESOURCES?;
 
-            strpool[pool_idx] = dup[(scroll + 2) : wstrlen(&dup[scroll + 2])!]; //(&dup[scroll + 2])[:wstrlen(&dup[scroll + 2])!];
+            strpool[pool_idx] = dup[(scroll + 2) : wstrlen(&dup[scroll + 2])!];
             dup = strpool[pool_idx];
             ++pool_idx;
-            if (pool_idx >= 64) return efi_error::OUT_OF_RESOURCES?;
-efi_sys.console.print(a2w("next2:"))!; efi_sys.console.printn(dup)!;
 
             scroll = 0;
             continue;
@@ -142,12 +68,31 @@ efi_sys.console.print(a2w("next2:"))!; efi_sys.console.printn(dup)!;
         }
     }
 
-efi_sys.console.printn(a2w("======================"))!;
-    for (usz i = 0; i < pool_idx; ++i) {
-        efi_sys.console.printn(strpool[i])!;
+    usz required_buffer_size = 0;
+    EfiStringRaw buff = null;
+    scroll = 0;
+
+    foreach (item : strpool[:pool_idx]) {
+        if (!item[0]) continue;
+        io::wprintn(item)!;
+        required_buffer_size += item.bytes();
     }
 
-    return a2w("ok")!;
+    buff = mem::malloc(required_buffer_size + ushort.sizeof)!;
+
+    foreach (item : strpool[:pool_idx]) {
+        if (!item[0]) continue;
+
+        mem::memcpy(&buff[scroll], item.ptr, item.bytes());
+        scroll += (item.len - 1);
+
+        // mem::free(item.ptr);
+    }
+
+    buff[wstrlen(buff)!] = 0;
+    io::memdump(buff, wstrlen(buff) + 2)!;
+
+    return wslice_from_raw(buff, required_buffer_size / ushort.sizeof);
 }
 
 
@@ -158,10 +103,10 @@ fn EfiString? _expand_arg(any value)
     switch (value.type) {
         case EfiString: nextcase;
         case EfiStringRaw:
-efi_sys.console.printn($$wstr16("efi_string"))!;
+io::wprintn($$wstr16("efi_string"))!;
             expansion = wide_strdup(wslice_from_raw(value, wstrlen((EfiStringRaw)value) + 1))!;
         case AsciiString:
-efi_sys.console.printn($$wstr16("ascii_string"))!;
+io::wprintn($$wstr16("ascii_string"))!;
             expansion = a2w(slice_from_raw(value, strlen((AsciiStringRaw)value) + 1))!;
         case bool:
             expansion = _bool_to_str(((bool)(value.ptr)))!;
@@ -187,8 +132,8 @@ efi_sys.console.printn($$wstr16("ascii_string"))!;
         default:
             expansion = a2w("umm")!; //efi_error::INVALID_PARAMETER?;
     }
-// efi_sys.console.print(a2w("EXPAND: '"))!;efi_sys.console.print(expansion)!;efi_sys.console.printn(a2w("'"))!;
-// efi_sys.console.printn(a2w(memdump(&&expansion.len, usz.sizeof)))!;
+// io::print(a2w("EXPAND: '"))!;io::print(expansion)!;io::printn(a2w("'"))!;
+// io::printn(a2w(memdump(&&expansion.len, usz.sizeof)))!;
 
     if (null == (void *)expansion.ptr || 0 == expansion.len) return efi_error::INVALID_PARAMETER?;
 

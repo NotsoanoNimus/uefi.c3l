@@ -17,226 +17,121 @@ bitstruct ConsoleColor : char @bigendian
 }
 
 
-// ---------------------------------------------------
-module uefi::efilib::efi_console;
-import uefi;
 
-fn Console*? new()
+// ---------------------------------------------------
+module uefi::efilib::efi_console @private;
+import uefi;
+import uefi::efilib::pre_load @public;
+
+
+fn Console*? new(EfiHandle image, SystemTable *st)
 {
-    if (!efilib::initialized) return efi_error::EFILIB_UNINITIALIZED?;
+    if (!pre_load::initialized) return efi_error::EFILIB_UNINITIALIZED?;
 
     Console *new_console;
     efi_error(
-        gBS.allocate_pool(LOADER_DATA, Console.sizeof, &new_console)
+        st.boot_services.allocate_pool(LOADER_DATA, Console.sizeof, &new_console)
     )!;
 
-    new_console.stdout = gST.conout;
-    new_console.stderr = gST.conerr;
-    new_console.stdin = gST.conin;
+    new_console.stdout = st.conout;
+    new_console.stderr = st.conerr;
+    new_console.stdin = st.conin;
 
     return new_console;
 }
+
 
 
 // ---------------------------------------------------
 module uefi::efilib;
 import uefi;
 
-fn EfiStatus? Console.print(
-    Console *this,
-    EfiString text,
-    SimpleTextOutputProtocol *stream = null
-) {
-    if (null == (void *)stream) stream = this.stdout;
+fn EfiStatus? Console.print(&self, EfiString text, SimpleTextOutputProtocol *stream = null)
+{
+    if (null == (void *)stream) stream = self.stdout;
     efi_error(stream.output_string(stream, text))!;
 
     return SUCCESS;
 }
 
 
-fn EfiStatus? Console.printn(
-    Console *this,
-    EfiString text,
-    SimpleTextOutputProtocol *stream = null
-) {
-    this.print(text, stream)!;
+fn EfiStatus? Console.printn(&self, EfiString text, SimpleTextOutputProtocol *stream = null)
+{
+    self.print(text, stream)!;
 
     ushort[3] nl = { '\r', '\n', 0 };
-    return this.print((EfiString)&nl, stream)!;
+    return self.print((EfiString)&nl, stream)!;
 }
 
 
-fn EfiStatus? Console.cprint(
-    Console *this,
-    EfiString text,
-    ConsoleColor color,
-    SimpleTextOutputProtocol *stream = null
-) {
-    if (null == (void *)stream) stream = this.stdout;
+fn EfiStatus? Console.cprint(&self, EfiString text, ConsoleColor color, SimpleTextOutputProtocol *stream = null)
+{
+    if (null == (void *)stream) stream = self.stdout;
 
     usz previous_attr = stream.mode.current_attribute;
+    defer stream.set_attribute(stream, previous_attr);
 
     stream.set_attribute(stream, (usz)(char)color);
-    EfiStatus? status = this.print(text, stream);
-    stream.set_attribute(stream, previous_attr);
-
-    return status;
+    return self.print(text, stream);
 }
 
 
-fn EfiStatus? Console.cprintn(
-    Console *this,
-    ConsoleColor color,
-    EfiString text,
-    SimpleTextOutputProtocol *stream = null
-) {
-    this.cprint(text, color, stream)!;
+fn EfiStatus? Console.cprintn(&self, ConsoleColor color, EfiString text, SimpleTextOutputProtocol *stream = null)
+{
+    self.cprint(text, color, stream)!;
 
     ushort[3] nl = { '\r', '\n', 0x00 };
-    return this.print((EfiString)&nl);
+    return self.print((EfiString)&nl);
 }
 
 
-fn EfiStatus? Console.printf(
-    Console *this,
-    EfiString text,
-    args...
-) {
-    EfiString formatted_text = _printf(text, ...args)!;
-    defer free(formatted_text);
-
-    return this.print(formatted_text);
-}
-
-
-fn EfiStatus? Console.fprintf(
-    Console *this,
-    SimpleTextOutputProtocol *stream,
-    EfiString text,
-    args...
-) {
-    EfiString formatted_text = _printf(text, ...args)!;
-    defer free(formatted_text);
-
-    return this.print(formatted_text, stream);
-}
-
-
-fn EfiStatus? Console.cprintf(
-    Console *this,
-    ConsoleColor color,
-    EfiString text,
-    args...
-) {
-    EfiString formatted_text = _printf(text, ...args)!;
-    defer free(formatted_text);
-
-    return this.cprint(formatted_text, color);
-}
-
-
-fn EfiStatus? Console.cfprintf(
-    Console *this,
-    ConsoleColor color,
-    SimpleTextOutputProtocol *stream,
-    EfiString text,
-    args...
-) {
-    EfiString formatted_text = _printf(text, ...args)!;
-    defer free(formatted_text);
-
-    return this.cprint(formatted_text, color, stream);
-}
-
-
-fn EfiStatus? Console.printe(
-    Console *this,
-    EfiString text,
-    args...
-) {
+fn EfiStatus? Console.printe(&self, EfiString text, args... )
+{
     EfiString formatted_text = _expandf(text, ...args)!;
-    defer free(formatted_text);
+    defer mem::free(formatted_text);
 
-    return this.print(formatted_text);
+    return self.print(formatted_text);
 }
 
 
-fn EfiStatus? Console.fprinte(
-    Console *this,
-    SimpleTextOutputProtocol *stream,
-    EfiString text,
-    args...
-) {
+fn EfiStatus? Console.fprinte(&self, SimpleTextOutputProtocol *stream, EfiString text, args...)
+{
     EfiString formatted_text = _expandf(text, ...args)!;
-    defer free(formatted_text);
+    defer mem::free(formatted_text);
 
-    return this.print(formatted_text, stream);
+    return self.print(formatted_text, stream);
 }
 
 
 fn EfiStatus? Console.cprinte(&self, ConsoleColor color, EfiString text, args...)
 {
     EfiString formatted_text = _expandf(text, ...args)!;
-    defer free(formatted_text);
+    defer mem::free(formatted_text);
 
     return self.cprint(formatted_text, color);
 }
 
 
-fn EfiStatus? Console.cfprinte(
-    Console *this,
-    ConsoleColor color,
-    SimpleTextOutputProtocol *stream,
-    EfiString text,
-    args...
-) {
+fn EfiStatus? Console.cfprinte(&self, ConsoleColor color, SimpleTextOutputProtocol *stream, EfiString text, args...)
+{
     EfiString formatted_text = _expandf(text, ...args)!;
-    defer free(formatted_text);
+    defer mem::free(formatted_text);
 
-    return this.cprint(formatted_text, color, stream);
+    return self.cprint(formatted_text, color, stream);
 }
 
 
-fn void? Console.clear(
-    Console *this,
-    ConsoleColor color,
-    bool preserve_attr = false,
-    bool reset_cursor = true
-) {
-    char previous_attr = (char)(this.stdout.mode.current_attribute & 0xFF);
+fn void? Console.clear(&self, ConsoleColor color, bool preserve_attr = false, bool reset_cursor = true)
+{
+    char previous_attr = (char)(self.stdout.mode.current_attribute & 0xFF);
 
-    efi_error(this.stdout.set_attribute(this.stdout, (usz)(char)color))!;
-    this.stdout.clear_screen(this.stdout);
+    efi_error(self.stdout.set_attribute(self.stdout, (usz)(char)color))!;
+    self.stdout.clear_screen(self.stdout);
 
     /* Reinstate the old attribute if specified. */
-    if (preserve_attr) efi_error(this.stdout.set_attribute(this.stdout, (usz)previous_attr))!;
+    if (preserve_attr) efi_error(self.stdout.set_attribute(self.stdout, (usz)previous_attr))!;
 
     /* Reset the cursor position if specified. */
-    if (reset_cursor) efi_error(this.stdout.set_cursor_position(this.stdout, 0, 0))!;
+    if (reset_cursor) efi_error(self.stdout.set_cursor_position(self.stdout, 0, 0))!;
 }
 
-
-
-
-module uefi::io;
-import uefi;
-
-
-macro EfiStatus? @memdump(void *ptr, usz len) @maydiscard => efi_sys.console.printn(a2w(memdump(ptr, len)));
-macro EfiStatus? @cmemdump(ConsoleColor $color, void *ptr, usz len) @maydiscard => efi_sys.console.cprintn($color, a2w(memdump(ptr, len)));
-
-macro void? @clear(ConsoleColor $color) @maydiscard => efi_sys.console.clear($color);
-
-macro EfiStatus? @wprint(EfiString str) @maydiscard => efi_sys.console.print(str);
-macro EfiStatus? @wprintn(EfiString str) @maydiscard => efi_sys.console.printn(str);
-macro EfiStatus? @wprinte(EfiString str, args...) @maydiscard => efi_sys.console.printn(str, ...args);
-macro EfiStatus? @print(AsciiString str) @maydiscard => efi_sys.console.print(a2w(str));
-macro EfiStatus? @printn(AsciiString str) @maydiscard => efi_sys.console.printn(a2w(str));
-macro EfiStatus? @printe(AsciiString str, args...) @maydiscard => efi_sys.console.printn(a2w(str), ...args);
-
-macro EfiStatus? @wcprint(ConsoleColor $color, EfiString str) @maydiscard => efi_sys.console.cprint($color, str);
-macro EfiStatus? @wcprintn(ConsoleColor $color, EfiString str) @maydiscard => efi_sys.console.cprintn($color, str);
-macro EfiStatus? @wcprinte(ConsoleColor $color, EfiString str, args...) @maydiscard => efi_sys.console.cprinte($color, str, ...args);
-macro EfiStatus? @cprint(ConsoleColor $color, AsciiString str) @maydiscard => efi_sys.console.cprint($color, a2w(str));
-macro EfiStatus? @cprintn(ConsoleColor $color, AsciiString str) @maydiscard => efi_sys.console.cprintn($color, a2w(str));
-macro EfiStatus? @cprinte(ConsoleColor $color, AsciiString str, args...) @maydiscard => efi_sys.console.cprinte($color, a2w(str), ...args);
