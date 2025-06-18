@@ -71,16 +71,24 @@ macro RuntimeServices* rs() => efi_system::efi_sys.runtime_services;
 macro SystemTable* st() => efi_system::efi_sys.system_table;
 macro EfiHandle image() => efi_system::efi_sys.image_handle;
 
-macro void @stall(usz $duration) => efi_system::efi_sys.stall($duration);
+macro SimpleTextOutputProtocol* stdout() => efi_system::efi_sys.console.stdout;
+macro SimpleTextOutputProtocol* stderr() => efi_system::efi_sys.console.stderr;
+macro any stdin() => !sys::stdin_extended() ? efi_system::efi_sys.console.stdin : efi_system::efi_sys.console.stdin_ex;
+macro bool stdin_extended() => null != efi_system::efi_sys.console.stdin_ex;
 
-macro void @reset(ResetType $type, EfiStatus code = SUCCESS, char[] buffer = {}) @noreturn
+macro void @stall(usz $duration) @builtin => efi_system::efi_sys.stall($duration);
+
+macro void @reset(ResetType $type, EfiStatus code = SUCCESS, char[] buffer = {}) @noreturn @builtin
     => efi_system::efi_sys.reset($type, code, buffer);
 
 macro void hang() @noreturn
 {
     sys::@disable_watchdog();
-    while (true);
+    while (true) sys::@stall(500_000);
 }
+macro void halt() @noreturn => sys::hang();
+
+macro void @panic($message) @builtin => efi_system::efi_sys.panic("[" +++ $$FILE +++ ":" +++ $$FUNC +++ ":" +++ $$LINE +++  "] PANIC!  " +++ $message);
 
 macro bool? @set_watchdog(usz $seconds) @maydiscard => efi_system::efi_sys.set_watchdog_timer($seconds);
 macro bool? @disable_watchdog() @maydiscard => efi_system::efi_sys.set_watchdog_timer(0);

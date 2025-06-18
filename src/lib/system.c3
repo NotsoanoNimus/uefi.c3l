@@ -4,11 +4,17 @@ import uefi;
 
 struct System
 {
-    Console                     *console;
     EfiHandle                   image_handle;
+
     SystemTable                 *system_table;
+
     BootServices                *boot_services;
     RuntimeServices             *runtime_services;
+
+    Console                     *console;
+
+    bool                        gop_initialized;
+
     // TODO: What's going on here?
     //LoadedImageProtocol         image_info;
     MemoryType image_data_type;
@@ -44,6 +50,8 @@ fn System*? new(EfiHandle image, SystemTable *st)
 
     new_system.image_handle = image;
 
+    new_system.gop_initialized = false;
+
     new_system.console = efi_console::new(image, st)!;
 
     return new_system;
@@ -56,14 +64,21 @@ module uefi::efilib;
 import uefi;
 
 
-fn void System.reset(&self, ResetType type, EfiStatus code = SUCCESS, char[] buffer = {})
-    @export("reset") @noreturn
-{
-    self.runtime_services.reset_system(type, code, buffer.len, buffer.ptr);
-}
+fn void System.reset(&self, ResetType type, EfiStatus code = SUCCESS, char[] buffer = {}) @noreturn
+    => self.runtime_services.reset_system(type, code, buffer.len, buffer.ptr);
 
 
 fn void System.stall(&self, usz duration) => self.boot_services.stall(duration);
+
+
+fn void System.panic(&self, AsciiString message) @noreturn
+{
+    if (!self.gop_initialized) {
+        io::cprintn({RED, BLACK}, message);
+    }
+
+    sys::halt();
+}
 
 
 fn bool? System.set_watchdog_timer(&self, usz timer_seconds, ulong code = -1, usz data_size = 0, EfiStringRaw data = null)
@@ -187,7 +202,7 @@ fn AsciiString? System.create_memdump(&self, void *at, usz len, usz align = 16)
 
 fn SystemMemoryMap*? System.get_memory_map(&self)
 {
-    SystemMemoryMap *result = mem::calloc(1, SystemMemoryMap.sizeof)!;
+    SystemMemoryMap *result = self.calloc(1, SystemMemoryMap.sizeof)!;
 
     // The first query should return a "BUFFER_TOO_SMALL" efi error, which sets 'buffer_size' to the right value.
     EfiStatus? status = self.boot_services.get_memory_map(
@@ -200,13 +215,13 @@ fn SystemMemoryMap*? System.get_memory_map(&self)
 
     if (catch status_as_fault = status) {
         if (efi_error::BUFFER_TOO_SMALL != status_as_fault) {
-            mem::free(result);
+            self.free(result);
             return status_as_fault?;
         }
     }
 
     if (0 == result.buffer_size || 0 == result.descriptor_size) {
-        mem::free(result);
+        self.free(result);
         return efi_error::NOT_FOUND?;
     }
 
@@ -216,7 +231,7 @@ fn SystemMemoryMap*? System.get_memory_map(&self)
     result.buffer_size += (2 * result.descriptor_size);
 
     // Allocate the resultant buffer.
-    result.descriptors = mem::calloc(1, result.buffer_size)!;
+    result.descriptors = self.calloc(1, result.buffer_size)!;
 
     status = self.boot_services.get_memory_map(
         &result.buffer_size,
@@ -226,14 +241,14 @@ fn SystemMemoryMap*? System.get_memory_map(&self)
         &result.descriptor_version
     );
     if (catch status_as_fault = status) {
-        mem::free(result.descriptors);
-        mem::free(result);
+        self.free(result.descriptors);
+        self.free(result);
         return status_as_fault?;
     }
 
     if (0 == result.buffer_size || 0 == result.descriptor_size) {
-        mem::free(result.descriptors);
-        mem::free(result);
+        self.free(result.descriptors);
+        self.free(result);
         return efi_error::NOT_FOUND?;
     }
 

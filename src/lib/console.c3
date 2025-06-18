@@ -7,6 +7,7 @@ struct Console
     SimpleTextOutputProtocol *stdout;
     SimpleTextOutputProtocol *stderr;
     SimpleTextInputProtocol *stdin;
+    SimpleTextInputExProtocol *stdin_ex;
 }
 
 
@@ -29,6 +30,12 @@ fn Console*? new(EfiHandle image, SystemTable *st)
     new_console.stdout = st.conout;
     new_console.stderr = st.conerr;
     new_console.stdin = st.conin;
+
+    // Attempt to initialize the extended input protocol. To do this, its handle must be pulled off of
+    //   instances pre-loaded by the system's UEFI firmware.
+    if (catch
+        efi_error(st.boot_services.locate_protocol(&&guid::SIMPLE_TEXT_INPUT_EX_PROTOCOL, null, &new_console.stdin_ex))
+    ) new_console.stdin_ex = null;
 
     return new_console;
 }
