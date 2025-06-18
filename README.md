@@ -11,7 +11,7 @@ Use of the `efilib` portion of the library is completely optional, including the
 module efi_hello_world;
 import uefi;
 
-fn EfiString! str_to_wide(char[] input) { /* ... */ }
+fn EfiString? str_to_wide(char[] input) { /* ... */ }
 
 fn EfiStatus efi_main(
     EfiHandle image_handle,
@@ -24,10 +24,10 @@ fn EfiStatus efi_main(
 
     /* NOTE: 'str_to_wide' is the current way to dynamically get a CHAR16 string.
         There is currently an open `c3c` issue to add native wide-string constants. */
-    efi_sys.console.cprintln(str_to_wide("Enabling GOP mode..."), {GREEN, BLACK})!!;
+    efi_sys.console.cprintn(str_to_wide("Enabling GOP mode..."), {GREEN, BLACK})!!;
 
     if (catch excuse = efilib::enable_gop()) {
-        efi_sys.console.cprintln(str_to_wide("ERROR: Failed to initialize Graphics Output Protocol."), {RED, BLACK})!!;
+        efi_sys.console.cprintn(str_to_wide("ERROR: Failed to initialize Graphics Output Protocol."), {RED, BLACK})!!;
     } else {
         efi_sys.framebuffer.draw_rect({0,0,100,200},{0xff123456,0xff0000dd});
     }

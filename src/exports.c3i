@@ -1,5 +1,111 @@
+// ------------------------------------------------------------------
 module uefi;
 
 
-//
 extern fn void initialize_lib(EfiHandle, SystemTable*);
+
+
+
+// ------------------------------------------------------------------
+module uefi::io;
+import uefi;
+import uefi::efi_system @public;
+
+
+macro EfiStatus? memdump(void *ptr, usz len, usz $align = 16) @maydiscard => efi_system::efi_sys.console.printn(a2w(efi_system::efi_sys.create_memdump(ptr, len, $align)));
+macro EfiStatus? cmemdump(ConsoleColor color, void *ptr, usz len, usz $align = 16) @maydiscard => efi_system::efi_sys.console.cprintn(color, a2w(efi_system::efi_sys.create_memdump(ptr, len, $align)));
+
+macro EfiStatus? wprint(EfiString str) @maydiscard => efi_system::efi_sys.console.print(str);
+macro EfiStatus? wprintn(EfiString str) @maydiscard => efi_system::efi_sys.console.printn(str);
+macro EfiStatus? wfprint(SimpleTextOutputProtocol *stream, EfiString str) @maydiscard => efi_system::efi_sys.console.print(str, stream);
+macro EfiStatus? wfprintn(SimpleTextOutputProtocol *stream, EfiString str) @maydiscard => efi_system::efi_sys.console.printn(str, stream);
+macro EfiStatus? wprinte(EfiString str, args...) @maydiscard => efi_system::efi_sys.console.printe(str, ...args);
+macro EfiStatus? wfprinte(SimpleTextOutputProtocol *stream, EfiString str, args...) @maydiscard => efi_system::efi_sys.console.fprinte(stream, str, ...args);
+
+macro EfiStatus? print(AsciiString str) @maydiscard => efi_system::efi_sys.console.print(a2w(str));
+macro EfiStatus? printn(AsciiString str) @maydiscard => efi_system::efi_sys.console.printn(a2w(str));
+macro EfiStatus? fprint(SimpleTextOutputProtocol *stream, AsciiString str) @maydiscard => efi_system::efi_sys.console.print(a2w(str), stream);
+macro EfiStatus? fprintn(SimpleTextOutputProtocol *stream, AsciiString str) @maydiscard => efi_system::efi_sys.console.printn(a2w(str), stream);
+macro EfiStatus? printe(AsciiString str, args...) @maydiscard => efi_system::efi_sys.console.printn(a2w(str), ...args);
+macro EfiStatus? fprinte(SimpleTextOutputProtocol *stream, AsciiString str, args...) @maydiscard => efi_system::efi_sys.console.printn(stream, a2w(str), ...args);
+
+macro EfiStatus? wcprint(ConsoleColor color, EfiString str) @maydiscard => efi_system::efi_sys.console.cprint(color, str);
+macro EfiStatus? wcprintn(ConsoleColor color, EfiString str) @maydiscard => efi_system::efi_sys.console.cprintn(color, str);
+macro EfiStatus? wcprinte(ConsoleColor color, EfiString str, args...) @maydiscard => efi_system::efi_sys.console.cprinte(color, str, ...args);
+macro EfiStatus? cprint(ConsoleColor color, AsciiString str) @maydiscard => efi_system::efi_sys.console.cprint(color, a2w(str));
+macro EfiStatus? cprintn(ConsoleColor color, AsciiString str) @maydiscard => efi_system::efi_sys.console.cprintn(color, a2w(str));
+macro EfiStatus? cprinte(ConsoleColor color, AsciiString str, args...) @maydiscard => efi_system::efi_sys.console.cprinte(color, a2w(str), ...args);
+
+
+
+// ------------------------------------------------------------------
+module uefi::str;
+import uefi;
+import uefi::efi_system @public;
+
+
+//
+
+
+
+// ------------------------------------------------------------------
+module uefi::console;
+import uefi;
+import uefi::efi_system @public;
+
+
+macro void? clear_to(ConsoleColor color, bool preserve = false, bool reset_cursor = true) @maydiscard =>
+    efi_system::efi_sys.console.clear(color, preserve, reset_cursor);
+macro void? clear() @maydiscard => (void)(efi_error(efi_system::efi_sys.console.stdout.clear_screen(efi_system::efi_sys.console.stdout))!);
+
+
+
+// ------------------------------------------------------------------
+module uefi::sys;
+import uefi;
+import uefi::efi_system @public;
+
+
+macro BootServices* bs() => efi_system::efi_sys.boot_services;
+macro RuntimeServices* rs() => efi_system::efi_sys.runtime_services;
+macro SystemTable* st() => efi_system::efi_sys.system_table;
+macro EfiHandle image() => efi_system::efi_sys.image_handle;
+
+macro void @stall(usz $duration) => efi_system::efi_sys.stall($duration);
+
+macro void @reset(ResetType $type, EfiStatus code = SUCCESS, char[] buffer = {}) @noreturn
+    => efi_system::efi_sys.reset($type, code, buffer);
+
+macro bool? @set_watchdog(usz $seconds) @maydiscard => efi_system::efi_sys.set_watchdog_timer($seconds);
+macro bool? @disable_watchdog() @maydiscard => efi_system::efi_sys.set_watchdog_timer(0);
+macro bool? set_watchdog_full(usz seconds, ulong code = -1, usz data_size = 0, EfiStringRaw data = null) @maydiscard
+    => efi_system::efi_sys.set_watchdog_timer(seconds, code, data_size, data);
+
+macro ulong? get_next_monotonic_count() @maydiscard => efi_system::efi_sys.get_next_monotonic_count();
+
+macro uint? get_crc32(void *data @noalias, usz data_size) => efi_system::efi_sys.calculate_crc32(data, data_size);
+
+
+
+// ------------------------------------------------------------------
+module uefi::mem;
+import uefi;
+import uefi::efi_system @public;
+
+
+macro void *memcpy(void *into, void *from, usz length)
+{
+    efi_system::efi_sys.memcpy(into, from, length);
+    return into;
+}
+
+macro void memset(void *at, char value, usz length) => efi_system::efi_sys.memset(at, value, length);
+
+macro void*? malloc(usz size) => efi_system::efi_sys.malloc(size);
+macro void*? calloc(usz num, usz size) => efi_system::efi_sys.calloc(size, num);
+macro void*? realloc(void *pool, usz prev_len, usz new_len) => efi_system::efi_sys.realloc(pool, prev_len, new_len);
+
+macro void free(void *pool) => efi_system::efi_sys.free(pool);
+macro void? free_safe(void *pool) => efi_system::efi_sys.free_safe(pool);
+
+

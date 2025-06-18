@@ -2,29 +2,36 @@ module uefi;
 
 
 /* Conversion macros: s2ms, s2us, ms2us (sec to millisec, sec to microsec, millisec to microsec) */
-macro usz @s2ms(usz x) @public => x * 1_000;
-macro usz @s2us(usz x) @public => x * 1_000_000;
-macro usz @ms2us(usz x) @public => x * 1_000;
+macro usz @s2ms(usz $x) @public @builtin => $x * 1_000;
+macro usz @s2us(usz $x) @public @builtin => $x * 1_000_000;
+macro usz @ms2us(usz $x) @public @builtin => $x * 1_000;
 
 /* min/max macros for le global use */
-macro @min(#x, #y) @public @builtin => (#x < #y ? #x : #y);
-macro @max(#x, #y) @public @builtin => (#x > #y ? #x : #y);
+macro @min(#x, #y) @public @builtin => ((#x) < (#y) ? (#x) : (#y));
+macro @max(#x, #y) @public @builtin => ((#x) > (#y) ? (#x) : (#y));
 
 
 /*
  * EFI_HANDLE alias (sec x.x.x of the UEFI 2.11 specification).
  */
-distinct EfiHandle = void*;
+typedef EfiHandle = void*;
 
 /*
  * All UEFI strings are wchar_t strings (Wide-Char types).
  */
-def EfiString = ushort*;
+alias EfiString = ushort[];
+alias EfiStringRaw = ushort*;
+
+/*
+ * ... But ASCII strings can also be used and dynamically converted to wide ones.
+ */
+alias AsciiString = char[];
+alias AsciiStringRaw = char*;
 
 /*
  * EFI_EVENT alias (sec 7.1.1 of the UEFI 2.11 specification).
  */
-distinct EfiEvent = void*;
+typedef EfiEvent = void*;
 
 
 /*
@@ -63,7 +70,7 @@ const uint  EFI_SPECIFICATION_VERSION       = EFI_SYSTEM_TABLE_REVISION;
 struct SystemTable
 {
     EfiTableHeader              header;
-    EfiString                   firmware_vendor;
+    EfiStringRaw                firmware_vendor;
     uint                        firmware_revision;
     EfiHandle                   conin_handle;
     SimpleTextInputProtocol     *conin;

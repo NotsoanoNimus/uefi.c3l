@@ -1,14 +1,24 @@
 module uefi_test;
 
-
-/* ... */
-
 import uefi;
 
 
 fn EfiStatus efi_main(
     EfiHandle image_handle,
     SystemTable *system_table
-) {
-    return uefi::EFI_SUCCESS;
+) @export("efi_main")
+{
+    /* Initialize uefi.c3l library constructs. */H
+    efilib::init(image_handle, system_table)!!;
+
+    /* Clear the screen and print some messages. */
+    (void)efi_sys.console.clear({LIGHT_GREEN, BLACK});
+    (void)efi_sys.console.cprintn(a2w("Hello, world!"), {LIGHT_GREEN, BLACK});
+    efi_sys.console.printe(a2w("A {} expression {}\r\n{}", true, "goes here!", a2w("FIN"))!!;
+
+    /* Wait 8 seconds. */
+    stall(uefi::@s2us(8));
+
+    /* Exit success. */
+    return SUCCESS;
 }

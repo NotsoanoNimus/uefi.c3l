@@ -1,3 +1,7 @@
+# CLion/IntelliJ/vscode
+.idea/
+.vscode/
+
 # Prerequisites
 *.d
 

@@ -24,8 +24,8 @@ struct EfiKey
     ushort      unicode_char;
 }
 
-def FnInputReset = fn EfiStatus(SimpleTextInputProtocol*, bool);
-def FnInputReadKey = fn EfiStatus(SimpleTextInputProtocol*, EfiKey*);
+alias FnInputReset = fn EfiStatus(SimpleTextInputProtocol*, bool);
+alias FnInputReadKey = fn EfiStatus(SimpleTextInputProtocol*, EfiKey*);
 
 /* 12.4.) Simple Text Output Protocol */
 module uefi::guid;
@@ -57,15 +57,15 @@ struct TextMode
     bool        is_cursor_visible;
 }
 
-def FnOutputReset = fn EfiStatus(SimpleTextOutputProtocol*, bool);
-def FnOutputString = fn EfiStatus(SimpleTextOutputProtocol*, EfiString);
-def FnOutputTestString = fn EfiStatus(SimpleTextOutputProtocol*, EfiString);
-def FnOutputQueryMode = fn EfiStatus(SimpleTextOutputProtocol*, usz, usz*, usz*);
-def FnOutputSetMode = fn EfiStatus(SimpleTextOutputProtocol*, usz);
-def FnOutputSetAttribute = fn EfiStatus(SimpleTextOutputProtocol*, usz);
-def FnOutputClearScreen = fn EfiStatus(SimpleTextOutputProtocol*);
-def FnOutputSetCursorPosition = fn EfiStatus(SimpleTextOutputProtocol*, usz, usz);
-def FnOutputEnableCursor = fn EfiStatus(SimpleTextOutputProtocol*, bool);
+alias FnOutputReset = fn EfiStatus(SimpleTextOutputProtocol*, bool);
+alias FnOutputString = fn EfiStatus(SimpleTextOutputProtocol*, EfiStringRaw);
+alias FnOutputTestString = fn EfiStatus(SimpleTextOutputProtocol*, EfiStringRaw);
+alias FnOutputQueryMode = fn EfiStatus(SimpleTextOutputProtocol*, usz, usz*, usz*);
+alias FnOutputSetMode = fn EfiStatus(SimpleTextOutputProtocol*, usz);
+alias FnOutputSetAttribute = fn EfiStatus(SimpleTextOutputProtocol*, usz);
+alias FnOutputClearScreen = fn EfiStatus(SimpleTextOutputProtocol*);
+alias FnOutputSetCursorPosition = fn EfiStatus(SimpleTextOutputProtocol*, usz, usz);
+alias FnOutputEnableCursor = fn EfiStatus(SimpleTextOutputProtocol*, bool);
 
 /* Standard terminal color constants. */
 enum TextColor : char (inline char raw)

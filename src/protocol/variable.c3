@@ -4,7 +4,7 @@ import uefi;
 
 /* 8.2.) Variable services */
 /* 8.2.1.) GetVariable() */
-def FnGetVariable = fn EfiStatus(EfiString, EfiGuid*, uint*, usz*, void*);
+alias FnGetVariable = fn EfiStatus(EfiStringRaw, EfiGuid*, uint*, usz*, void*);
 
 /* Variable Attributes */
 enum EfiVarAttr : uint (uint raw)   // TODO: Add `inline` inside parens when supported
@@ -28,10 +28,10 @@ struct VariableAuthentication3CertId
 }
 
 /* 8.2.2.) GetNextVariableName() */
-def FnGetNextVariableName = fn EfiStatus(usz*, EfiString, EfiGuid*);
+alias FnGetNextVariableName = fn EfiStatus(usz*, EfiStringRaw, EfiGuid*);
 
 /* 8.2.3.) SetVariable() */
-def FnSetVariable = fn EfiStatus(EfiString, EfiGuid*, uint, usz, void*);
+alias FnSetVariable = fn EfiStatus(EfiStringRaw, EfiGuid*, uint, usz, void*);
 
 /* TODO: Too much extra complexity to use right now. Add later. */
 /*
@@ -59,7 +59,7 @@ struct VariableAuthentication3Nonce
 }
 
 /* 8.2.4.) QueryVariableInfo() */
-def FnQueryVariableInfo = fn EfiStatus(uint, ulong*, ulong*, ulong*);
+alias FnQueryVariableInfo = fn EfiStatus(uint, ulong*, ulong*, ulong*);
 
 /* 8.2.7.2.) Hardware Error Record Variables */
 const EfiGuid EFI_HARDWARE_ERROR_VARIABLE =

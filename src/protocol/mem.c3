@@ -5,10 +5,10 @@ import uefi;
 /* 7.2.) Memory Allocation Services */
 
 /* EFI_ALLOCATE_PAGES (7.2.1) and Allocation definitions */
-def FnAllocatePages = fn EfiStatus(AllocateType, MemoryType, usz, PhysicalAddress*);
+alias FnAllocatePages = fn EfiStatus(AllocateType, MemoryType, usz, PhysicalAddress*);
 
-def PhysicalAddress = ulong;
-def VirtualAddress = ulong;
+alias PhysicalAddress = ulong;
+alias VirtualAddress = ulong;
 enum AllocateType
 {
     ANY_PAGES,
@@ -38,10 +38,10 @@ enum MemoryType : uint
 }
 
 /* EFI_FREE_PAGES (7.2.2) */
-def FnFreePages = fn EfiStatus(PhysicalAddress, usz);
+alias FnFreePages = fn EfiStatus(PhysicalAddress, usz);
 
 /* EFI_GET_MEMORY_MAP (7.2.3) and related definitions */
-def FnGetMemoryMap = fn EfiStatus(usz*, MemoryDescriptor*, usz*, usz*, uint*);
+alias FnGetMemoryMap = fn EfiStatus(usz*, MemoryDescriptor*, usz*, usz*, uint*);
 
 const uint MEMORY_DESCRIPTOR_VERSION    = 1;
 struct MemoryDescriptor
@@ -53,7 +53,7 @@ struct MemoryDescriptor
     MemoryAttribute     attribute;
 }
 
-distinct MemoryAttribute = ulong;
+typedef MemoryAttribute = ulong;
 const MemoryAttribute MEMORY_UC                 = 0x0000_0000_0000_0001;
 const MemoryAttribute MEMORY_WC                 = 0x0000_0000_0000_0002;
 const MemoryAttribute MEMORY_WT                 = 0x0000_0000_0000_0004;
@@ -73,18 +73,18 @@ const MemoryAttribute MEMORY_ISA_VALID          = 0x4000_0000_0000_0000;
 const MemoryAttribute MEMORY_ISA_MASK           = 0x0FFF_F000_0000_0000;
 
 /* EFI_ALLOCATE_POOL (7.2.4) */
-def FnAllocatePool = fn EfiStatus(MemoryType, usz, void**);
+alias FnAllocatePool = fn EfiStatus(MemoryType, usz, void**);
 
 /* EFI_FREE_POOL (7.2.5) */
-def FnFreePool = fn EfiStatus(void*);
+alias FnFreePool = fn EfiStatus(void*);
 
 
 /* 8.4.) Virtual Memory services */
 /* 8.4.1.) SetVirtualAddressMap() */
-def FnSetVirtualAddressMap = fn EfiStatus(usz, usz, uint, MemoryDescriptor*);
+alias FnSetVirtualAddressMap = fn EfiStatus(usz, usz, uint, MemoryDescriptor*);
 
 /* 8.4.2.) ConvertPointer() */
-def FnConvertPointer = fn EfiStatus(usz, void**);
+alias FnConvertPointer = fn EfiStatus(usz, void**);
 const usz EFI_OPTIONAL_PTR = 0x1;
 
 /* 8.5.3.3.) Items related to capsules */
