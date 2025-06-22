@@ -20,7 +20,7 @@ EfiHandle gImageHandle @export("gImageHandle") @builtin @deprecated("Legacy symb
     @param [&in] st: "A reference to the system table provided to the EFI application"
     @return "Whether the library was successfully initialized."
 *>
-fn bool? init(EfiHandle image, SystemTable *st) @public
+fn bool? init(EfiHandle image, SystemTable *st) @public @allow_deprecated
 {
     if (null == (void *)image || null == (void *)st) return efi_error::LOAD_ERROR?;
 
