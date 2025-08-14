@@ -13,6 +13,49 @@ RuntimeServices *gRS @export("gRS") @builtin @deprecated("Legacy symbol. Use `sy
 
 EfiHandle gImageHandle @export("gImageHandle") @builtin @deprecated("Legacy symbol. Use `sys::image()` instead.") = null;
 
+bool in_panic @local = false;
+bool panic_in_panic @local = false;
+
+fn void default_panic(String message, String file, String function, uint line) @public @allow_deprecated @export("panic") @noreturn
+{
+    if (!initialized) sys::lock();   // spin forever, can't do anything...
+
+    if (in_panic)
+    {
+        if (panic_in_panic) sys::lock();   // prevent infinite panic recursion
+        panic_in_panic = true;
+
+        gST.conout.output_string(gST.conout, @wstring("PANIC raised within panicfn! Locking system..."));
+        sys::lock();
+    }
+
+    in_panic = true;
+
+    // Create a wide string on the stack from the passed information.
+    ushort[1024] _w_msg;
+    usz _w_msg_start, x;
+
+    foreach (i, c : file) _w_msg[i % _w_msg.len] = (ushort)c; _w_msg_start = file.len;
+
+    _w_msg[_w_msg_start++] = (ushort)':';
+    foreach (i, c : function) _w_msg[(i + _w_msg_start) % _w_msg.len] = (ushort)c; _w_msg_start += function.len;
+
+    _w_msg[_w_msg_start++] = (ushort)':';
+    ushort[7] _i_to_str;
+    for (x = 0; line && x < _i_to_str.len; line /= 10, ++x) _i_to_str[x] = (ushort)(0x30 + (line % 10));
+    for (usz w = 1; w <= x; ++w) _w_msg[_w_msg_start++] = _i_to_str[x - w];
+
+    _w_msg[_w_msg_start++] = (ushort)':';
+    foreach (i, c : message) _w_msg[(i + _w_msg_start) % _w_msg.len] = (ushort)c;
+
+    _w_msg[1023] = 0;   // explicit null-terminator
+
+    gST.conout.output_string(gST.conout, @wstring("PANIC!  "));
+    gST.conout.output_string(gST.conout, &_w_msg);
+
+    sys::lock();
+}
+
 
 <*
     Initialize the UEFI C3 library. This call should be made immediately upon EFI entry.
@@ -22,6 +65,8 @@ EfiHandle gImageHandle @export("gImageHandle") @builtin @deprecated("Legacy symb
 *>
 fn bool? init(EfiHandle image, SystemTable *st) @public @allow_deprecated
 {
+    builtin::panic = &default_panic;   // in case the user did not compile with '--panicfn'
+
     if (null == (void *)image || null == (void *)st) return efi_error::LOAD_ERROR?;
 
     // Though these are deprecated, they should hang around for the purpose of interfacing with old code.
