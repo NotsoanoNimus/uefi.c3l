@@ -32,7 +32,7 @@ fn EfiString? ascii_to_wide(AsciiString str)
 {
     if (null == (void *)str.ptr || 0 == str[0]) return efi_error::INVALID_PARAMETER?;
 
-    EfiString ret = wslice_from_raw(mem::calloc(ushort.sizeof, str.len + 1)!, str.len + 1);
+    EfiString ret = wslice_from_raw(mem::calloc(ushort.sizeof * (str.len + 1)), str.len + 1);
 
     for (int i = 0; i < str.len; ++i) ret[i] = (ushort)str[i];
     ret[^1] = 0;
@@ -46,7 +46,7 @@ fn AsciiString? wide_to_ascii(EfiString str)
 {
     if (null == (void *)str.ptr || 0 == str[0]) return efi_error::INVALID_PARAMETER?;
 
-    AsciiString ret = slice_from_raw(mem::calloc(1, str.len + 1)!, str.len + 1);
+    AsciiString ret = slice_from_raw(mem::calloc(char.sizeof * (str.len + 1)), str.len + 1);
 
     for (int i = 0; i < str.len; ++i) ret[i] = (char)str[i];   /* lossy */
     ret[^1] = 0;
@@ -62,7 +62,7 @@ fn EfiString? wide_strdup(EfiString str)
     if (0 == str.len) return a2w({0});
 
     usz str_len = wide_strlen(str.ptr)!;
-    EfiString ret = wslice_from_raw(mem::calloc(ushort.sizeof, (str_len + 1))!, str_len + 1);
+    EfiString ret = wslice_from_raw(mem::calloc(ushort.sizeof * (str_len + 1)), str_len + 1);
 
     mem::memcpy(ret, str, str_len * ushort.sizeof);
     ret[^1] = 0;
@@ -75,9 +75,9 @@ fn AsciiString? ascii_strdup(AsciiString str)
     @export("strdup")
 {
     if (null == (void *)str.ptr) return efi_error::INVALID_PARAMETER?;
-    if (0 == str.len) return mem::calloc(char.sizeof, 1)![:1];
+    if (0 == str.len) return mem::calloc(1)[:1];
 
-    AsciiString ret = slice_from_raw(mem::malloc(str.len + 1)!, str.len + 1);
+    AsciiString ret = slice_from_raw(mem::malloc(str.len + 1), str.len + 1);
     mem::memcpy(ret, str, str.len);
     ret[^1] = 0;
 
@@ -94,7 +94,7 @@ fn EfiString? wide_strcat(EfiString str, EfiString addl)
     usz addl_size = wide_strlen(addl.ptr)! * ushort.sizeof;
     usz new_size = str_size + addl_size + ushort.sizeof;
 
-    void *buff = mem::malloc(new_size)!;
+    void *buff = mem::malloc(new_size);
     wstrcpy(buff, str)!;
     mem::memcpy((void *)((uptr)buff + str_size), addl.ptr, addl_size);
 

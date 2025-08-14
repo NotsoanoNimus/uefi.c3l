@@ -65,7 +65,7 @@ import uefi::efi_warning;
 macro @efi_err($x) @private => (usz)((1l << ((usz.sizeof * 8) - 1)) | $x);
 macro @efi_warn($x) @private => (usz)$x;
 
-enum EfiStatus : usz (inline usz raw, fault fault_type)
+enum EfiStatus : usz (usz raw, fault fault_type)
 {
     SUCCESS                     = { 0, efi_error::NO_FAULT },
 

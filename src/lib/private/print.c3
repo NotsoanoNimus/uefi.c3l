@@ -78,7 +78,7 @@ fn EfiString? _expandf(EfiString input, args...)
         required_buffer_size += item.bytes();
     }
 
-    buff = mem::malloc(required_buffer_size + ushort.sizeof)!;
+    buff = mem::malloc(required_buffer_size + ushort.sizeof);
 
     foreach (item : strpool[:pool_idx]) {
         if (!item[0]) continue;

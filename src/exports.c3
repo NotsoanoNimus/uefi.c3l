@@ -1,8 +1,11 @@
 // ------------------------------------------------------------------
 module uefi;
+import uefi::efi_system @public;
 
 
 extern fn void initialize_lib(EfiHandle, SystemTable*);
+
+PanicFn panic_func = &uefi::efilib::pre_load::default_panic;
 
 
 
@@ -11,6 +14,13 @@ module uefi::io;
 import uefi;
 import uefi::efi_system @public;
 
+
+// interface LibcFile
+// {
+//     //
+// }
+// typedef OutStream (LibcFile) = uptr;
+// const OutStream STDERR @export("stderr") = (OutStream)efi_system::efi_sys.console.stderr;
 
 macro EfiStatus? memdump(void *ptr, usz len, usz $align = 16) @maydiscard => efi_system::efi_sys.console.printn(a2w(efi_system::efi_sys.create_memdump(ptr, len, $align)));
 macro EfiStatus? cmemdump(ConsoleColor color, void *ptr, usz len, usz $align = 16) @maydiscard => efi_system::efi_sys.console.cprintn(color, a2w(efi_system::efi_sys.create_memdump(ptr, len, $align)));
@@ -87,6 +97,7 @@ macro void hang() @noreturn
     while (true) sys::@stall(500_000);
 }
 macro void halt() @noreturn => sys::hang();
+fn void lock() @noreturn { while (true); }
 
 macro void @panic($message) @builtin => efi_system::efi_sys.panic("[" +++ $$FILE +++ ":" +++ $$FUNC +++ ":" +++ $$LINE +++  "] PANIC!  " +++ $message);
 
@@ -108,19 +119,22 @@ import uefi;
 import uefi::efi_system @public;
 
 
-macro void *memcpy(void *into, void *from, usz length)
+fn void* memcpy(void *into, void *from, usz length) @export("memcpy") @nostrip
 {
     efi_system::efi_sys.memcpy(into, from, length);
     return into;
 }
 
-macro void memset(void *at, char value, usz length) => efi_system::efi_sys.memset(at, value, length);
+fn void memset(void *at, char value, usz length) @export("memset") @nostrip
+    => efi_system::efi_sys.memset(at, value, length);
 
-macro void*? malloc(usz size) => efi_system::efi_sys.malloc(size);
-macro void*? calloc(usz num, usz size) => efi_system::efi_sys.calloc(size, num);
-macro void*? realloc(void *pool, usz prev_len, usz new_len) => efi_system::efi_sys.realloc(pool, prev_len, new_len);
+fn void* malloc(usz size) @export("malloc") @nostrip => efi_system::efi_sys.malloc(size)!!;
+fn void* calloc(usz num, usz size) @export("calloc") @nostrip => efi_system::efi_sys.calloc(num, size)!!;
 
-macro void free(void *pool) => efi_system::efi_sys.free(pool);
-macro void? free_safe(void *pool) => efi_system::efi_sys.free_safe(pool);
+fn void* realloc(void *pool, usz prev_len, usz new_len) @export("realloc") @nostrip
+    => efi_system::efi_sys.realloc(pool, prev_len, new_len)!!;
+
+fn void free(void *pool) @export("free") @nostrip => efi_system::efi_sys.free(pool);
+fn void? free_safe(void *pool) @export("free_safe") @nostrip => efi_system::efi_sys.free_safe(pool);
 
 

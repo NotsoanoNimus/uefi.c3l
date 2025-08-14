@@ -32,9 +32,4 @@ fn EfiKeyData? read_key(usz timeout_ms)
 }
 
 
-// macro bool? @confirm(EfiString prompt, $yes_by_default = true)
-// {
-//     confirm
-// }
-
-fn bool? confirm(EfiString prompt) => {}
+// fn bool? confirm(EfiString prompt) => {}

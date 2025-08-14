@@ -29,7 +29,7 @@ import uefi::efilib::efi_console @public;
 import uefi::efilib::pre_load @public;
 
 
-System *efi_sys @private = null;
+System* efi_sys @private = null;
 
 
 fn System*? new(EfiHandle image, SystemTable *st)
@@ -71,10 +71,13 @@ fn void System.reset(&self, ResetType type, EfiStatus code = SUCCESS, char[] buf
 fn void System.stall(&self, usz duration) => self.boot_services.stall(duration);
 
 
-fn void System.panic(&self, AsciiString message) @noreturn
+fn void System.panic(&self, AsciiString message) @noreturn @allow_deprecated
 {
     if (!self.gop_initialized) {
-        io::cprintn({RED, BLACK}, message);
+        ushort[1024] _w_msg;
+        foreach (i, c : message) _w_msg[i % _w_msg.len] = (ushort)c;
+        gST.conout.set_attribute(gST.conout, (usz)(char)(ConsoleColor){RED, BLACK});
+        gST.conout.output_string(gST.conout, &_w_msg);
     }
 
     sys::halt();
@@ -105,23 +108,20 @@ fn uint? System.calculate_crc32(&self, void *data @noalias, usz data_size)
 
 
 fn void System.free(&self, void *pool)
-    @export("free")
 {
     if (null != pool) self.boot_services.free_pool(pool);
 }
 
 
 fn void? System.free_safe(&self, void *pool)
-    @export("free_safe") 
 {
     if (null != pool) efi_error(self.boot_services.free_pool(pool))!;
 }
 
 
 fn void*? System.malloc(&self, usz size, MemoryType type = LIMIT)
-    @export("malloc")
 {
-    if (LIMIT == type) type = self.image_data_type;
+    if (MemoryType.LIMIT == type) type = self.image_data_type;
 
     void *res;
     efi_error(self.boot_services.allocate_pool(type, size, &res))!;
@@ -131,9 +131,8 @@ fn void*? System.malloc(&self, usz size, MemoryType type = LIMIT)
 
 
 fn void*? System.calloc(&self, usz size, usz length, MemoryType type = LIMIT)
-    @export("calloc")
 {
-    if (LIMIT == type) type = self.image_data_type;
+    if (MemoryType.LIMIT == type) type = self.image_data_type;
 
     void *p = self.malloc(size * length, type)!;
     self.memset(p, 0x00, size * length);
@@ -143,7 +142,6 @@ fn void*? System.calloc(&self, usz size, usz length, MemoryType type = LIMIT)
 
 
 fn void*? System.realloc(&self, void *pool, usz prev_len, usz new_len)
-    @export("realloc")
 {
     if (0 == new_len) {
         self.free(pool);
@@ -162,7 +160,6 @@ fn void*? System.realloc(&self, void *pool, usz prev_len, usz new_len)
 
 
 fn void System.memset(&self, void *at, char value, usz length)
-    @export("memset")
 {
     if (null == at || 0 == length) return;
 
@@ -171,7 +168,6 @@ fn void System.memset(&self, void *at, char value, usz length)
 
 
 fn void System.memcpy(&self, void *to, void *from, usz length)
-    @export("memcpy")
 {
     if (null == to || null == from || 0 == length) return;
 

@@ -1,4 +1,4 @@
-module uefi::proto::mem;
+module uefi::proto::memory;
 import uefi;
 
 

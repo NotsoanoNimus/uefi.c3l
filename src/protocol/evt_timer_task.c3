@@ -4,13 +4,15 @@ import uefi;
 
 /* 7.1.) Event, Timer, and Task Priority Services */
 /* NOTE: EfiEvent is defined in ../def.c3, as it's more globally used. */
-typedef EventType = uint;
-const EventType EVT_TIMER               = 0x8000_0000;
-const EventType EVT_RUNTIME             = 0x4000_0000;
-const EventType EVT_NOTIFY_WAIT         = 0x0000_0100;
-const EventType EVT_NOTIFY_SIGNAL       = 0x0000_0200;
-const EventType EVT_SIGNAL_EXIT_BOOT_SERVICES        = 0x0000_0201;
-const EventType EVT_SIGNAL_VIRTUAL_ADDRESS_CHANGE    = 0x6000_0202;
+enum EventType : uint (uint raw)
+{
+    TIMER                           = 0x8000_0000,
+    RUNTIME                         = 0x4000_0000,
+    NOTIFY_WAIT                     = 0x0000_0100,
+    NOTIFY_SIGNAL                   = 0x0000_0200,
+    SIGNAL_EXIT_BOOT_SERVICES       = 0x0000_0201,
+    SIGNAL_VIRTUAL_ADDRESS_CHANGE   = 0x6000_0202,
+}
 
 
 /* EFI_EVENT_NOTIFY (7.1.1) */

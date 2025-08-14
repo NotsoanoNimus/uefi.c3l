@@ -28,7 +28,7 @@ struct CapsuleHeader
     uint        capsule_image_size;
 }
 
-enum CapsuleFlags : uint (inline uint raw)
+enum CapsuleFlags : uint (uint raw)
 {
     PERSIST_ACROSS_RESET        = 0x0001_0000,
     POPULATE_SYSTEM_TABLE       = 0x0002_0000,

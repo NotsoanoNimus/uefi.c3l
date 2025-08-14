@@ -13,7 +13,7 @@ bitstruct ConsoleColor : char @bigendian
 
 
 /* 12.1.) Console I/O Protocol (Scan Codes - see Appendix B, Table B.1) */
-enum ScanCode : ushort (inline ushort raw)
+enum ScanCode : ushort (ushort raw)
 {
     NULL            = 0x0000,
     UP_ARROW        = 0x0001,
@@ -101,7 +101,7 @@ struct SimpleTextInputExProtocol
     FnInputUnregisterKeystrokeNotify    unregister_keystroke_notify;
 }
 
-enum KeyShiftState : uint (inline uint raw)
+enum KeyShiftState : uint (uint raw)
 {
     SHIFT_STATE_VALID       = 0x8000_0000,
     RIGHT_SHIFT_PRESSED     = 0x0000_0001,
@@ -116,7 +116,7 @@ enum KeyShiftState : uint (inline uint raw)
     SYS_REQ_PRESSED         = 0x0000_0200,
 }
 
-enum KeyToggleState : char (inline char raw)
+enum KeyToggleState : char (char raw)
 {
     TOGGLE_STATE_VALID      = 0x80,
     KEY_STATE_EXPOSED       = 0x40,
@@ -187,7 +187,7 @@ alias FnOutputSetCursorPosition = fn EfiStatus(SimpleTextOutputProtocol*, usz, u
 alias FnOutputEnableCursor = fn EfiStatus(SimpleTextOutputProtocol*, bool);
 
 /* Standard terminal color constants. */
-enum TextColor : char (inline char raw)
+enum TextColor : char (char raw)
 {
     BLACK               = 0x00,
     BLUE                = 0x01,
